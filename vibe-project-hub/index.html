@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibe Project Hub - 나의 AI 코딩 저장소</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glows -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <i data-lucide="sparkles"></i>
+        </div>
+        <div>
+          <h1>Vibe Project Hub</h1>
+          <p class="subtitle">AI와 함께한 나의 바이브 코딩 아카이브</p>
+        </div>
+      </div>
+      
+      <!-- Stats Board & Sync Configuration -->
+      <div class="header-actions">
+        <div class="sync-indicator local-mode" id="sync-indicator">
+          <span class="indicator-dot"></span>
+          <span class="indicator-text">로컬 단독 모드</span>
+        </div>
+        <button class="btn btn-secondary btn-icon-only" id="btn-open-settings" title="Google Sheets 연동 설정">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
+
+      <!-- Stats Board -->
+      <div class="stats-board">
+        <div class="stat-item">
+          <span class="stat-value" id="stat-total">0</span>
+          <span class="stat-label">총 프로젝트</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value text-completed" id="stat-completed">0</span>
+          <span class="stat-label">완료됨</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value text-progress" id="stat-progress">0</span>
+          <span class="stat-label">개발 중</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Control Bar -->
+    <section class="control-bar">
+      <div class="search-box">
+        <i data-lucide="search" class="search-icon"></i>
+        <input type="text" id="search-input" placeholder="프로젝트명, 기술 스택, AI 도구 검색...">
+      </div>
+
+      <div class="filter-group">
+        <button class="filter-btn active" data-status="all">전체</button>
+        <button class="filter-btn" data-status="completed"><i data-lucide="check-circle-2"></i> 완료</button>
+        <button class="filter-btn" data-status="in-progress"><i data-lucide="play-circle"></i> 개발 중</button>
+        <button class="filter-btn" data-status="idea"><i data-lucide="lightbulb"></i> 아이디어</button>
+      </div>
+
+      <button class="btn btn-primary" id="btn-open-modal">
+        <i data-lucide="plus"></i> 새 프로젝트 추가
+      </button>
+    </section>
+
+    <!-- Main Grid View -->
+    <main class="projects-grid" id="projects-grid">
+      <!-- Cards will be injected here via app.js -->
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>프로젝트 로딩 중...</p>
+      </div>
+    </main>
+
+    <!-- JSON Sync / Export Footer Banner -->
+    <footer class="app-footer">
+      <div class="sync-banner glass-card">
+        <div class="sync-info">
+          <i data-lucide="refresh-cw" class="sync-icon"></i>
+          <div>
+            <h3>로컬 파일 동기화</h3>
+            <p>프로젝트를 추가하거나 변경한 후 아래 버튼을 클릭하여 JSON 데이터를 복사하고 <code>projects.json</code> 파일에 덮어쓰세요.</p>
+          </div>
+        </div>
+        <div class="sync-actions">
+          <button class="btn btn-secondary" id="btn-copy-json">
+            <i data-lucide="copy"></i> JSON 복사하기
+          </button>
+          <button class="btn btn-secondary" id="btn-download-json">
+            <i data-lucide="download"></i> 다운로드
+          </button>
+        </div>
+      </div>
+      <p class="copyright">Vibe Project Hub &copy; 2026. Built with Antigravity.</p>
+    </footer>
+  </div>
+
+  <!-- Add Project Modal -->
+  <div class="modal-overlay" id="project-modal">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2><i data-lucide="folder-plus"></i> 새 프로젝트 등록</h2>
+        <button class="btn-close" id="btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="project-form" class="modal-form">
+        <input type="hidden" id="proj-id">
+        <div class="form-group">
+          <label for="proj-title">프로젝트 이름 *</label>
+          <input type="text" id="proj-title" required placeholder="예: My Smart Assistant">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="proj-status">진행 상태 *</label>
+            <select id="proj-status" required>
+              <option value="completed">완료 (completed)</option>
+              <option value="in-progress" selected>개발 중 (in-progress)</option>
+              <option value="idea">아이디어 (idea)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="proj-category">카테고리 *</label>
+            <select id="proj-category" required>
+              <option value="Web App">Web App (웹 앱)</option>
+              <option value="Chrome Extension">Chrome Extension (크롬 익스텐션)</option>
+              <option value="Desktop App">Desktop App (데스크톱 앱)</option>
+              <option value="Automation / GAS">Automation / GAS (자동화 & 앱스스크립트)</option>
+              <option value="Bot / CLI">Bot / CLI (봇 & 터미널 도구)</option>
+              <option value="Others">Others (기타)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="proj-description">프로젝트 설명 *</label>
+          <textarea id="proj-description" rows="3" required placeholder="이 앱이 해결하고자 하는 문제와 주요 기능을 간략히 적어주세요."></textarea>
+        </div>
+
+         <div class="form-row">
+          <div class="form-group">
+            <label for="proj-tech">기술 스택 (쉼표로 구분) *</label>
+            <input type="text" id="proj-tech" required placeholder="예: HTML, CSS, JavaScript">
+            <div class="chips-container" id="chips-container">
+              <span class="stack-chip" data-value="Google Apps Script">Apps Script</span>
+              <span class="stack-chip" data-value="JavaScript">JavaScript</span>
+              <span class="stack-chip" data-value="HTML">HTML</span>
+              <span class="stack-chip" data-value="CSS">CSS</span>
+              <span class="stack-chip" data-value="Python">Python</span>
+              <span class="stack-chip" data-value="React">React</span>
+              <span class="stack-chip" data-value="Streamlit">Streamlit</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="proj-ai">사용한 AI 도구</label>
+            <input type="text" id="proj-ai" placeholder="예: Gemini 3.5 Flash">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="proj-prompt">핵심 프롬프트 요약</label>
+          <textarea id="proj-prompt" rows="2" placeholder="개발 시 AI에게 유용하게 활용했던 프롬프트를 적어주세요."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="proj-demo">데모 링크 URL</label>
+            <div class="input-btn-group">
+              <input type="url" id="proj-demo" placeholder="https://...">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-analyze-demo" title="주소 패턴으로 기술 스택 분석">분석</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="proj-repo">저장소 URL (GitHub 등)</label>
+            <div class="input-btn-group">
+              <input type="url" id="proj-repo" placeholder="https://github.com/...">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-analyze-repo" title="GitHub 언어 통계로 기술 스택 분석">분석</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-modal">취소</button>
+          <button type="submit" class="btn btn-primary">등록하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-content glass-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2><i data-lucide="settings"></i> 구글 시트 연동 설정</h2>
+        <button class="btn-close" id="btn-close-settings"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+          구글 앱스 스크립트로 배포한 웹 앱(Web App) URL을 등록하면, 브라우저 로컬 저장소를 거치지 않고 인터넷이 연결된 모든 기기에서 구글 스프레드시트와 실시간 연동되어 데이터가 자동 동기화됩니다.
+        </p>
+        <div class="form-group">
+          <label for="settings-api-url" style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">Apps Script 웹 앱 URL</label>
+          <input type="url" id="settings-api-url" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+      </div>
+      <div class="modal-footer" style="margin-top: 24px; display: flex; justify-content: space-between;">
+        <button type="button" class="btn btn-secondary" id="btn-clear-settings" style="border-color: rgba(239, 68, 68, 0.3); color: #f87171;">연동 해제</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-settings">취소</button>
+          <button type="button" class="btn btn-primary" id="btn-save-settings">저장하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toast">복사 완료!</div>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
