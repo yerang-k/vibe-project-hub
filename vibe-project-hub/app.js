@@ -687,16 +687,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projTechInput.value = currentTechs.join(', ');
         updateChipHighlights();
+
+        // Auto detect and select category
+        const recommendedCategory = autoDetectCategory(currentTechs, document.getElementById('proj-demo').value || document.getElementById('proj-repo').value);
+        if (recommendedCategory) {
+          document.getElementById('proj-category').value = recommendedCategory;
+        }
       });
     });
 
-    // Real-time chip sync when user types manually
-    projTechInput.addEventListener('input', updateChipHighlights);
+    // Real-time chip sync and auto category selection when user types manually
+    projTechInput.addEventListener('input', () => {
+      updateChipHighlights();
+
+      const currentTechs = projTechInput.value
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+
+      const recommendedCategory = autoDetectCategory(currentTechs, document.getElementById('proj-demo').value || document.getElementById('proj-repo').value);
+      if (recommendedCategory) {
+        document.getElementById('proj-category').value = recommendedCategory;
+      }
+    });
 
     // Sync highlights when modal opens or resets
     btnOpenModal.addEventListener('click', () => {
       setTimeout(updateChipHighlights, 50); // Small delay to let input render
     });
+
+    // Auto-detect project category based on url or tech stack
+    function autoDetectCategory(techs, url) {
+      const urlLower = (url || '').toLowerCase();
+      const techsLower = techs.map(t => t.toLowerCase());
+
+      // 1. Automation / GAS
+      if (urlLower.includes('script.google.com') || techsLower.includes('google apps script') || techsLower.includes('gas')) {
+        return 'Automation / GAS';
+      }
+      
+      // 2. Bot / CLI
+      if (techsLower.includes('discord.js') || techsLower.includes('discord.py') || techsLower.includes('python-telegram-bot') || techsLower.includes('cli') || techsLower.includes('shell') || techsLower.includes('bash')) {
+        return 'Bot / CLI';
+      }
+
+      // 3. Chrome Extension
+      if (techsLower.includes('chrome extension') || techsLower.includes('chrome-extension') || techsLower.includes('extension')) {
+        return 'Chrome Extension';
+      }
+
+      // 4. Desktop App
+      if (techsLower.includes('electron') || techsLower.includes('tauri') || techsLower.includes('pyqt') || techsLower.includes('tkinter') || techsLower.includes('desktop app')) {
+        return 'Desktop App';
+      }
+
+      // 5. Web App (Default fallback if typical web techs or streamlit are found)
+      if (
+        urlLower.includes('netlify.app') || 
+        urlLower.includes('vercel.app') || 
+        urlLower.includes('github.io') || 
+        urlLower.includes('streamlit.app') ||
+        techsLower.includes('react') ||
+        techsLower.includes('vue') ||
+        techsLower.includes('svelte') ||
+        techsLower.includes('next.js') ||
+        techsLower.includes('vite') ||
+        techsLower.includes('streamlit') ||
+        techsLower.includes('typescript')
+      ) {
+        return 'Web App';
+      }
+
+      // General web files
+      if (techsLower.includes('html') || techsLower.includes('javascript') || techsLower.includes('css')) {
+        return 'Web App';
+      }
+
+      return null;
+    }
 
     // Demo URL analysis (Pattern matching)
     btnAnalyzeDemo.addEventListener('click', () => {
@@ -734,7 +802,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projTechInput.value = currentTechs.join(', ');
         updateChipHighlights();
-        showToast(`주소 패턴에서 기술 감지 완료: ${detected.join(', ')}`);
+
+        // Auto detect and select category
+        const recommendedCategory = autoDetectCategory(currentTechs, url);
+        if (recommendedCategory) {
+          document.getElementById('proj-category').value = recommendedCategory;
+          showToast(`기술 감지 완료: ${detected.join(', ')} / 카테고리 자동 설정: [${recommendedCategory}]`);
+        } else {
+          showToast(`주소 패턴에서 기술 감지 완료: ${detected.join(', ')}`);
+        }
       } else {
         showToast('해당 주소에서 감지된 패턴이 없습니다. 추천 칩에서 직접 선택해 보세요!');
       }
@@ -787,7 +863,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             projTechInput.value = currentTechs.join(', ');
             updateChipHighlights();
-            showToast(`GitHub에서 기술 감지 완료: ${detectedLanguages.join(', ')}`);
+
+            // Auto detect and select category
+            const recommendedCategory = autoDetectCategory(currentTechs, url);
+            if (recommendedCategory) {
+              document.getElementById('proj-category').value = recommendedCategory;
+              showToast(`GitHub 언어 감지 완료: ${detectedLanguages.join(', ')} / 카테고리 자동 설정: [${recommendedCategory}]`);
+            } else {
+              showToast(`GitHub에서 기술 감지 완료: ${detectedLanguages.join(', ')}`);
+            }
           } else {
             showToast('저장소에 등록된 프로그래밍 코드가 없습니다.');
           }
