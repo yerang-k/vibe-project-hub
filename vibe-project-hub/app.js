@@ -44,6 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsModal = document.getElementById('settings-modal');
   const settingsApiUrlInput = document.getElementById('settings-api-url');
 
+  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbwwpi_1lsya4u535-My2j4kXnegUhmxmlX6rtkdEOxyvvTOxYGODwno-TWYi1wJ4LAMpg/exec';
+
+  // Get active Sheet API URL (Local Storage preference OR Default hardcoded GAS Web App URL)
+  function getSheetApiUrl() {
+    const saved = localStorage.getItem('sheet_api_url');
+    if (saved === 'none') {
+      return null; // Explicitly disabled
+    }
+    if (!saved) {
+      return DEFAULT_API_URL; // Fallback default
+    }
+    return saved; // User custom URL
+  }
+
   // 3. Init Function
   async function init() {
     // Initialize Lucide icons on page load
@@ -51,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateSyncIndicator();
 
-    const sheetApiUrl = localStorage.getItem('sheet_api_url');
+    const sheetApiUrl = getSheetApiUrl();
     if (sheetApiUrl) {
       await fetchFromGoogleSheets(sheetApiUrl);
     } else {
@@ -75,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update visual state of Sheets Integration Indicator
   function updateSyncIndicator() {
-    const sheetApiUrl = localStorage.getItem('sheet_api_url');
+    const sheetApiUrl = getSheetApiUrl();
     if (sheetApiUrl) {
       syncIndicator.className = 'sync-indicator api-mode';
       syncIndicator.querySelector('.indicator-text').textContent = 'Google Sheets 동기화 중';
@@ -425,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const submitBtn = projectForm.querySelector('button[type="submit"]');
       const originalBtnText = submitBtn.textContent;
       
-      const sheetApiUrl = localStorage.getItem('sheet_api_url');
+      const sheetApiUrl = getSheetApiUrl();
 
       if (sheetApiUrl) {
         // --- 1. GOOGLE SHEETS SYNC MODE ---
@@ -608,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const sheetApiUrl = localStorage.getItem('sheet_api_url');
+      const sheetApiUrl = getSheetApiUrl();
 
       if (sheetApiUrl) {
         showToast('구글 시트에서 삭제하는 중...');
@@ -917,7 +931,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Google Sheets Settings Modal Controls ---
     btnOpenSettings.addEventListener('click', () => {
-      const savedApiUrl = localStorage.getItem('sheet_api_url') || '';
+      let savedApiUrl = localStorage.getItem('sheet_api_url') || '';
+      if (savedApiUrl === 'none') savedApiUrl = '';
       settingsApiUrlInput.value = savedApiUrl;
       settingsModal.classList.add('active');
       document.body.style.overflow = 'hidden';
@@ -959,7 +974,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear Settings
     btnClearSettings.addEventListener('click', () => {
       if (confirm('구글 시트 연동을 해제하고 로컬 모드로 전환하시겠습니까?')) {
-        localStorage.removeItem('sheet_api_url');
+        localStorage.setItem('sheet_api_url', 'none');
         settingsApiUrlInput.value = '';
         updateSyncIndicator();
         closeSettingsModal();
