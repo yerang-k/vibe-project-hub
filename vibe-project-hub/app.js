@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelSettings = document.getElementById('btn-cancel-settings');
   const btnSaveSettings = document.getElementById('btn-save-settings');
   const btnClearSettings = document.getElementById('btn-clear-settings');
+  const btnShareSettings = document.getElementById('btn-share-settings');
   const settingsModal = document.getElementById('settings-modal');
   const settingsApiUrlInput = document.getElementById('settings-api-url');
 
@@ -63,6 +64,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Lucide icons on page load
     lucide.createIcons();
     
+    // Check URL parameters for api url auto-save
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiParam = urlParams.get('api');
+    if (apiParam) {
+      const trimmedApi = apiParam.trim();
+      if (trimmedApi.startsWith('https://script.google.com/')) {
+        localStorage.setItem('sheet_api_url', trimmedApi);
+        showToast('구글 시트 연동 주소가 자동으로 등록되었습니다!');
+        
+        // Clean URL parameter so it looks neat
+        const cleanUrl = window.location.href.split('?')[0].split('#')[0];
+        window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+      } else if (trimmedApi === 'none') {
+        localStorage.setItem('sheet_api_url', 'none');
+        showToast('구글 시트 연동이 해제되었습니다.');
+        
+        const cleanUrl = window.location.href.split('?')[0].split('#')[0];
+        window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+      }
+    }
+
     updateSyncIndicator();
 
     const sheetApiUrl = getSheetApiUrl();
@@ -983,6 +1005,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reload from local fallback
         loadLocalFallback();
       }
+    });
+
+    // Copy Sync sharing link
+    btnShareSettings.addEventListener('click', () => {
+      const sheetApiUrl = getSheetApiUrl();
+      if (!sheetApiUrl) {
+        showToast('구글 시트 연동 설정을 먼저 완료해 주세요.');
+        return;
+      }
+
+      const baseUrl = window.location.href.split('?')[0].split('#')[0];
+      const shareUrl = `${baseUrl}?api=${encodeURIComponent(sheetApiUrl)}`;
+
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => showToast('공유용 연동 주소 링크가 복사되었습니다!'))
+        .catch(err => {
+          console.error('Failed to copy link', err);
+          showToast('링크 복사에 실패했습니다.');
+        });
     });
   }
 

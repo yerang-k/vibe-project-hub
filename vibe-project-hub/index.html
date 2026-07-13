@@ -217,12 +217,17 @@
           <input type="url" id="settings-api-url" placeholder="https://script.google.com/macros/s/.../exec">
         </div>
       </div>
-      <div class="modal-footer" style="margin-top: 24px; display: flex; justify-content: space-between;">
-        <button type="button" class="btn btn-secondary" id="btn-clear-settings" style="border-color: rgba(239, 68, 68, 0.3); color: #f87171;">연동 해제</button>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-settings">취소</button>
-          <button type="button" class="btn btn-primary" id="btn-save-settings">저장하기</button>
+      <div class="modal-footer" style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; width: 100%; gap: 8px;">
+          <button type="button" class="btn btn-secondary" id="btn-clear-settings" style="border-color: rgba(239, 68, 68, 0.3); color: #f87171;">연동 해제</button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" id="btn-cancel-settings">취소</button>
+            <button type="button" class="btn btn-primary" id="btn-save-settings">저장하기</button>
+          </div>
         </div>
+        <button type="button" class="btn btn-secondary" id="btn-share-settings" style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 6px; border-color: rgba(99, 102, 241, 0.4); color: #818cf8;">
+          <i data-lucide="share-2"></i> 이 기기의 연동 링크 복사하기
+        </button>
       </div>
     </div>
   </div>

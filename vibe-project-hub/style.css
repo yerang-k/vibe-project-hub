@@ -691,7 +691,7 @@ a {
   padding: 24px;
   max-height: 95vh;
   overflow-y: auto;
-  overflow-x: hidden; /* Prevent horizontal scrollbar */
+  overflow-x: hidden;
   transform: scale(0.9);
   transition: var(--transition-smooth);
   box-sizing: border-box;
