@@ -1,41 +1,117 @@
 [
   {
-    "id": 1,
-    "title": "Gemini Antigravity Extension",
-    "description": "AI 에이전트를 로컬 개발 환경과 연결하여 실시간 코딩 및 리서치를 보조하는 강력한 Chrome 확장 프로그램입니다.",
-    "status": "completed",
-    "category": "Chrome Extension",
-    "techStack": ["JavaScript", "HTML", "Chrome API", "CSS"],
-    "aiTools": "Gemini 3.5 Flash",
-    "promptSummary": "Chrome 확장 프로그램의 백그라운드 스크립트와 사이드패널 간 양방향 메시지 통신을 구현하고, 예외 처리가 가미된 표준 보일러플레이트 코드를 작성해줘.",
-    "demoUrl": "https://example.com/demo-antigravity",
-    "repoUrl": "https://github.com/user/gemini-antigravity",
-    "createdAt": "2026-07-10"
-  },
-  {
-    "id": 2,
-    "title": "AI Email Autowriter",
-    "description": "수신된 이메일의 맥락과 톤앤매너를 분석하여 상황별 맞춤 답장 초안을 원클릭으로 작성해주는 PyQt6 데스크톱 프로그램입니다.",
+    "id": 1784170473448,
+    "title": "한글(HWP) 창 실시간 동기화 - AI 계획서 자동 생성기",
     "status": "in-progress",
-    "category": "Desktop App",
-    "techStack": ["Python", "PyQt6", "Gemini API"],
-    "aiTools": "Claude 3.5 Sonnet",
-    "promptSummary": "PyQt6 환경에서 QThread와 Worker 패턴을 사용해 백그라운드에서 API 요청을 처리하고, UI가 멈추지 않는 로딩 스피너 애니메이션을 구현해줘.",
-    "demoUrl": "",
-    "repoUrl": "https://github.com/user/email-autowriter",
-    "createdAt": "2026-07-11"
+    "category": "Web App",
+    "description": "한글 계획서 AI 작성 도구",
+    "techStack": [
+      "Python"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://github.com/yerang-k/hwpaicreator/releases/download/v1.0.0/HWP_Gemini_Generator.exe",
+    "repoUrl": "",
+    "createdAt": "2026-07-16"
   },
   {
-    "id": 3,
-    "title": "Smart Scheduler Bot",
-    "description": "대화형 자연어 메신저 대화 속에서 날짜, 시간, 약속 내용을 추출해 캘린더 일정을 자동 스케줄링해주는 Discord 봇입니다.",
-    "status": "idea",
-    "category": "Bot / CLI",
-    "techStack": ["Node.js", "Discord.js", "Google Calendar API"],
-    "aiTools": "GPT-4o",
-    "promptSummary": "자연어 문장(예: 내일 오후 3시에 철수와 미팅 있어)에서 날짜, 시간, 제목을 정확하게 ISO8601 포맷의 JSON으로 매핑해주는 OpenAI 시스템 프롬프트를 설계해줘.",
-    "demoUrl": "",
+    "id": 1783872218509,
+    "title": "카페 주문 수합 앱",
+    "description": "협의회 음료 및 다과 주문 앱",
+    "status": "completed",
+    "category": "Automation / GAS",
+    "techStack": [
+      "Google Apps Script",
+      "JavaScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://script.google.com/macros/s/AKfycbwQC-IAlgVAaTAqPL2jJlqKrwMoyHvbWI6KbqsCLzJ8oZI96oOvd9O0kINkFVLUAIdr/exec",
+    "repoUrl": "https://docs.google.com/spreadsheets/d/1o8QBCc5qO7E8SPu4w-qu6fSsIUHbFnIRlDosCRNobYc/edit?usp=sharing",
+    "createdAt": "2026-07-11T15:00:00.000Z"
+  },
+  {
+    "id": 1783871686681,
+    "title": "후쿠오카 가족 여행을 위한 지도",
+    "description": "2026년 8월 후쿠오카 가족 여행을 위한 지도",
+    "status": "completed",
+    "category": "Automation / GAS",
+    "techStack": [
+      "Google Apps Script",
+      "JavaScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://script.google.com/macros/s/AKfycbz1RHkn12WNTti9EuoavE0ii4rO6O7Rz4Ns16aq2zMxxLLVLB7O_KoJpuBtcYKB2Zu-ow/exec",
+    "repoUrl": "https://docs.google.com/spreadsheets/d/1QBugcHwI_fIeQQGuHRQYNLN17y0r-3wSqFRp83gULjw/edit?usp=sharing",
+    "createdAt": "2026-07-11T15:00:00.000Z"
+  },
+  {
+    "id": 1783869549436,
+    "title": "바른 글AI",
+    "description": "2022개정교육과정 적용, 과목 성취기준에 따른 글쓰기 주제 추천, 평가기준 작성 및 평가, 피드백",
+    "status": "in-progress",
+    "category": "Web App",
+    "techStack": [
+      "HTML",
+      "CSS",
+      "JavaScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://korean-writing-assessor.yeahskyr.workers.dev/?mode=teacher",
+    "repoUrl": "https://github.com/yerang-k/korean-writing-assessor",
+    "createdAt": "2026-07-11T15:00:00.000Z"
+  },
+  {
+    "id": 1783869039649,
+    "title": "수행평가 점수 확인 앱",
+    "status": "completed",
+    "category": "Automation / GAS",
+    "description": "다수의 학생이 다수의 수행평가 점수를 개별적으로 확인할 수 있는 앱",
+    "techStack": [
+      "Google Apps Script",
+      "JavaScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://script.google.com/macros/s/AKfycbwwpi_1lsya4u535-My2j4kXnegUhmxmlX6rtkdEOxyvvTOxYGODwno-TWYi1wJ4LAMpg/exec?authuser=0",
+    "repoUrl": "https://docs.google.com/spreadsheets/d/1Z1XpfPF7oW6oWznghlaGQH2P40cTZztbcXMl8SeCUNE/edit?usp=sharing",
+    "createdAt": "2026-07-11T15:00:00.000Z"
+  },
+  {
+    "id": 1783868963876,
+    "title": "[교사도우미] 교사 업무, 수업 도우미",
+    "description": "교사의 업무와 수업(출석, 진도체크, 시간표 등) 도우",
+    "status": "completed",
+    "category": "Web App",
+    "techStack": [
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "TypeScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://아쿠아마린-캣-9a0d8c.netlify.app",
+    "repoUrl": "https://github.com/yerang-k/teacher-app",
+    "createdAt": "2026-07-11T15:00:00.000Z"
+  },
+  {
+    "id": 1783868771469,
+    "title": "음운 변동 퀴즈 앱",
+    "description": "국어 음운 변동 학습 후 사용해 볼 수 있는 퀴즈 앱",
+    "status": "completed",
+    "category": "Web App",
+    "techStack": [
+      "HTML",
+      "CSS",
+      "JavaScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://eumun-gram-2026.netlify.app",
     "repoUrl": "",
-    "createdAt": "2026-07-12"
+    "createdAt": "2026-07-11T15:00:00.000Z"
   }
 ]
