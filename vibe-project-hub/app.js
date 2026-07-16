@@ -1030,3 +1030,27 @@ document.addEventListener('DOMContentLoaded', () => {
   // Trigger init
   init();
 });
+// 관리자 권한 확인 및 일반 사용자 화면 제어 로직
+document.addEventListener("DOMContentLoaded", function () {
+  // 1. 주소창에서 ?api= 파라미터가 존재하는지 확인합니다.
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasApiParam = urlParams.has('api');
+
+  // 2. 제어할 HTML 요소(버튼 및 배너)들을 가져옵니다.
+  const btnOpenModal = document.getElementById("btn-open-modal");       // "새 프로젝트 추가" 버튼
+  const btnOpenSettings = document.getElementById("btn-open-settings"); // "설정" 톱니바퀴 버튼
+  const appFooter = document.querySelector(".app-footer");             // "로컬 파일 동기화" 푸터 배너
+
+  // 3. 만약 주소에 ?api=가 없다면 (일반 방문자라면) 관리자 기능들을 숨깁니다.
+  if (!hasApiParam) {
+    if (btnOpenModal) btnOpenModal.style.display = "none";
+    if (btnOpenSettings) btnOpenSettings.style.display = "none";
+    if (appFooter) appFooter.style.display = "none";
+    
+    // (선택 사항) 로컬 단독 모드 표시등을 숨기거나 일반 사용자용 텍스트로 바꿀 수도 있습니다.
+    const syncIndicator = document.getElementById("sync-indicator");
+    if (syncIndicator) {
+      syncIndicator.style.display = "none"; // 로컬 단독 모드 표시등도 깔끔하게 숨깁니다.
+    }
+  }
+});
