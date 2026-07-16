@@ -1,5 +1,20 @@
 [
   {
+    "id": 1784176473280,
+    "title": "일본 카드 트래커",
+    "status": "in-progress",
+    "category": "Web App",
+    "description": "일본 여행 중 결제에 가장 적합한 카드를 찾아줌",
+    "techStack": [
+      "HTML"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://winter-term-7a22.yeahskyr.workers.dev/",
+    "repoUrl": "",
+    "createdAt": "2026-07-16"
+  },
+  {
     "id": 1784170473448,
     "title": "한글(HWP) 창 실시간 동기화 - AI 계획서 자동 생성기",
     "description": "한글 계획서 AI 작성 도구",
