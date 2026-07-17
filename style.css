@@ -162,7 +162,10 @@ a {
   align-items: center;
   gap: 12px;
 }
-.btn-icon-only {
+/* .btn.btn-icon-only: 클래스 두 개로 특이도를 올려, 뒤에 선언된 .btn의
+   padding(12px 24px)이 이 규칙의 padding: 0을 덮어쓰지 못하게 합니다.
+   (폭 38px 버튼에 좌우 패딩 48px가 들어가면 아이콘이 폭 0으로 짜부라짐) */
+.btn.btn-icon-only {
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -176,11 +179,14 @@ a {
   cursor: pointer;
   transition: var(--transition-smooth);
 }
-.btn-icon-only i {
+/* svg도 함께 지정: lucide가 <i data-lucide>를 <svg>로 교체하므로 i만으로는 못 잡음 */
+.btn-icon-only i,
+.btn-icon-only svg {
   width: 18px;
   height: 18px;
+  flex-shrink: 0;
 }
-.btn-icon-only:hover {
+.btn.btn-icon-only:hover {
   border-color: var(--neon-purple);
   color: white;
   background: var(--bg-card-hover);
