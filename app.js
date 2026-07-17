@@ -110,14 +110,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Update visual state of Sheets Integration Indicator
-  function updateSyncIndicator() {
-    const sheetApiUrl = getSheetApiUrl();
-    if (sheetApiUrl) {
+  // state: 'syncing' 시도 중 | 'synced' 성공 | 'failed' 실패(낡은 데이터 표시 중) | 'local' 연동 해제
+  // 인자를 생략하면 아직 시도 전이라는 뜻으로, 설정값만 보고 표시합니다.
+  function updateSyncIndicator(state) {
+    const text = syncIndicator.querySelector('.indicator-text');
+    if (!state) {
+      state = getSheetApiUrl() ? 'syncing' : 'local';
+    }
+
+    if (state === 'syncing') {
       syncIndicator.className = 'sync-indicator api-mode';
-      syncIndicator.querySelector('.indicator-text').textContent = 'Google Sheets 동기화 중';
+      text.textContent = 'Google Sheets 동기화 중...';
+    } else if (state === 'synced') {
+      syncIndicator.className = 'sync-indicator api-mode';
+      text.textContent = 'Google Sheets 동기화됨';
+    } else if (state === 'failed') {
+      syncIndicator.className = 'sync-indicator error-mode';
+      text.textContent = '시트 연결 실패 · 저장된 데이터 표시 중';
     } else {
       syncIndicator.className = 'sync-indicator local-mode';
-      syncIndicator.querySelector('.indicator-text').textContent = '로컬 단독 모드';
+      text.textContent = '로컬 단독 모드';
     }
   }
 
@@ -141,18 +153,22 @@ document.addEventListener('DOMContentLoaded', () => {
           projects = data;
           saveToLocalStorage(); // Cache it locally
           render();
+          updateSyncIndicator('synced');
         } else {
           console.error('GAS response is not array', data);
           showToast('동기화 실패: 데이터 형식이 잘못되었습니다.');
+          updateSyncIndicator('failed');
           loadLocalFallback();
         }
       } else {
         showToast('구글 시트 로드 실패. 로컬 캐시를 불러옵니다.');
+        updateSyncIndicator('failed');
         loadLocalFallback();
       }
     } catch (err) {
       console.error('Sheets sync error:', err);
       showToast('네트워크 오류: 로컬 오프라인 데이터로 구동합니다.');
+      updateSyncIndicator('failed');
       loadLocalFallback();
     }
   }
