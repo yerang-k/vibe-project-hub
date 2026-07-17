@@ -13,7 +13,7 @@ try {
         
         # Resolve file path
         $cleanPath = $path.TrimStart('/')
-        $filePath = Join-Path "C:\Users\user\.gemini\antigravity\scratch\vibe-project-hub" $cleanPath
+        $filePath = Join-Path $PSScriptRoot $cleanPath
         
         if (Test-Path $filePath -PathType Leaf) {
             $content = [System.IO.File]::ReadAllBytes($filePath)
