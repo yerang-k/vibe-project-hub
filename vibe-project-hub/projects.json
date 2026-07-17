@@ -2,9 +2,9 @@
   {
     "id": 1784254469227,
     "title": "통합연수등록시스템",
+    "description": "연수등록 시간을 줄이고 한번의 QR로 여러 건의 연수 등록을 한번에 할 수 있는 앱.\n등록 시 서명이 자동으로 구글스프레드시트로 연동되어 등록부 출력까지 한번에 할 수 있다.",
     "status": "completed",
     "category": "Automation / GAS",
-    "description": "연수등록 시간을 줄이고 한번의 QR로 여러 건의 연수 등록을 한번에 할 수 있는 앱.\n등록 시 서명이 자동으로 구글스프레드시트로 연동되어 등록부 출력까지 한번에 할 수 있다.",
     "techStack": [
       "Google Apps Script",
       "JavaScript"
@@ -13,7 +13,7 @@
     "promptSummary": "",
     "demoUrl": "https://script.google.com/macros/s/AKfycbwM-c2L9tmZbOmfXAshnpi3OEFhbS0LfgvGDklre7hmcjdYFdC_LJzDRVj0hzqJth68Nw/exec",
     "repoUrl": "https://docs.google.com/spreadsheets/d/133EBmhifHUAQzrmI88v3ivL2tnBBoWdU2b5Ctaal-68/edit?gid=338771110#gid=338771110",
-    "createdAt": "2026-07-17"
+    "createdAt": "2026-07-16T15:00:00.000Z"
   },
   {
     "id": 1784176473280,
