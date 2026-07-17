@@ -1,10 +1,26 @@
 [
   {
+    "id": 1784254469227,
+    "title": "통합연수등록시스템",
+    "status": "completed",
+    "category": "Automation / GAS",
+    "description": "연수등록 시간을 줄이고 한번의 QR로 여러 건의 연수 등록을 한번에 할 수 있는 앱.\n등록 시 서명이 자동으로 구글스프레드시트로 연동되어 등록부 출력까지 한번에 할 수 있다.",
+    "techStack": [
+      "Google Apps Script",
+      "JavaScript"
+    ],
+    "aiTools": "",
+    "promptSummary": "",
+    "demoUrl": "https://script.google.com/macros/s/AKfycbwM-c2L9tmZbOmfXAshnpi3OEFhbS0LfgvGDklre7hmcjdYFdC_LJzDRVj0hzqJth68Nw/exec",
+    "repoUrl": "https://docs.google.com/spreadsheets/d/133EBmhifHUAQzrmI88v3ivL2tnBBoWdU2b5Ctaal-68/edit?gid=338771110#gid=338771110",
+    "createdAt": "2026-07-17"
+  },
+  {
     "id": 1784176473280,
     "title": "일본 카드 트래커",
+    "description": "일본 여행 중 결제에 가장 적합한 카드를 찾아줌",
     "status": "in-progress",
     "category": "Web App",
-    "description": "일본 여행 중 결제에 가장 적합한 카드를 찾아줌",
     "techStack": [
       "HTML"
     ],
@@ -12,7 +28,7 @@
     "promptSummary": "",
     "demoUrl": "https://winter-term-7a22.yeahskyr.workers.dev/",
     "repoUrl": "",
-    "createdAt": "2026-07-16"
+    "createdAt": "2026-07-15T15:00:00.000Z"
   },
   {
     "id": 1784170473448,
