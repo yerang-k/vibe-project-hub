@@ -1032,17 +1032,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 // 관리자 권한 확인 및 일반 사용자 화면 제어 로직
 document.addEventListener("DOMContentLoaded", function () {
-  // 1. 주소창에서 ?api= 파라미터가 존재하는지 확인합니다.
-  const urlParams = new URLSearchParams(window.location.search);
-  const hasApiParam = urlParams.has('api');
+  // 1. 관리자 여부를 판별합니다.
+  //    이 핸들러는 init()보다 나중에 등록되어 나중에 실행되는데, init()은 그 사이에
+  //    replaceState로 주소창의 ?api=를 이미 지워버립니다. 따라서 주소창을 보면 항상
+  //    비어 있고, init()이 localStorage에 저장해 둔 값으로 판별해야 합니다.
+  //    방문자는 ?api=로 들어온 적이 없으므로 이 값이 없습니다.
+  const isAdmin = localStorage.getItem('sheet_api_url') !== null;
 
   // 2. 제어할 HTML 요소(버튼 및 배너)들을 가져옵니다.
   const btnOpenModal = document.getElementById("btn-open-modal");       // "새 프로젝트 추가" 버튼
   const btnOpenSettings = document.getElementById("btn-open-settings"); // "설정" 톱니바퀴 버튼
   const appFooter = document.querySelector(".app-footer");             // "로컬 파일 동기화" 푸터 배너
 
-  // 3. 만약 주소에 ?api=가 없다면 (일반 방문자라면) 관리자 기능들을 숨깁니다.
-  if (!hasApiParam) {
+  // 3. 일반 방문자라면 관리자 기능들을 숨깁니다.
+  if (!isAdmin) {
     if (btnOpenModal) btnOpenModal.style.display = "none";
     if (btnOpenSettings) btnOpenSettings.style.display = "none";
     if (appFooter) appFooter.style.display = "none";
