@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsModal = document.getElementById('settings-modal');
   const settingsApiUrlInput = document.getElementById('settings-api-url');
 
-  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbwwpi_1lsya4u535-My2j4kXnegUhmxmlX6rtkdEOxyvvTOxYGODwno-TWYi1wJ4LAMpg/exec';
+  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbwnLDMELObAxmve5uoGoTIkCW7JdGJgdlqSGeyEma06Zr2KsUG3_2ujV6eVa0_lWFhAFQ/exec';
 
   // Get active Sheet API URL (Local Storage preference OR Default hardcoded GAS Web App URL)
   function getSheetApiUrl() {
