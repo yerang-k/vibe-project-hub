@@ -554,16 +554,23 @@ a {
 }
 
 /* Card Admin Tools (Edit & Delete) */
-.card-admin-tools {
-  position: absolute;
-  top: 18px;
-  right: 82px;
+/* 헤더 오른쪽 그룹: 수정·삭제 버튼과 상태 배지를 나란히 배치.
+   버튼을 절대좌표(right: 82px)로 띄우면 배지 길이("개발 중", "아이디어")에
+   따라 겹치므로, 배지 왼쪽에 흐름대로 놓아 어떤 길이에도 겹치지 않게 함 */
+.card-header-right {
   display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-admin-tools {
+  display: none; /* 방문자에게는 숨김 — 관리자(body.is-admin)만 표시 */
   gap: 6px;
-  z-index: 10;
   opacity: 0;
   transform: translateY(-3px);
   transition: var(--transition-smooth);
+}
+body.is-admin .card-admin-tools {
+  display: flex;
 }
 .project-card:hover .card-admin-tools {
   opacity: 1;
