@@ -683,6 +683,7 @@ body.is-admin .card-admin-tools {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin-top: 24px;
+  line-height: 1.7; /* 두 줄 문구(저작권 + 이용 안내)의 줄 간격 */
 }
 
 /* 8. Add Project Modal Overlay & Content */
