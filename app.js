@@ -324,20 +324,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return `
         <article class="project-card glass-card" data-id="${project.id}">
-          <div class="card-admin-tools">
-            <button type="button" class="btn-admin-icon btn-edit" title="수정" data-id="${project.id}">
-              <i data-lucide="edit-3"></i>
-            </button>
-            <button type="button" class="btn-admin-icon btn-delete" title="삭제" data-id="${project.id}">
-              <i data-lucide="trash-2"></i>
-            </button>
-          </div>
           <div class="card-header">
             <span class="card-category">${escapeHtml(project.category || '기타')}</span>
-            <span class="badge-status ${statusClass}">
-              <span class="status-dot"></span>
-              ${statusLabel}
-            </span>
+            <div class="card-header-right">
+              <div class="card-admin-tools">
+                <button type="button" class="btn-admin-icon btn-edit" title="수정" data-id="${project.id}">
+                  <i data-lucide="edit-3"></i>
+                </button>
+                <button type="button" class="btn-admin-icon btn-delete" title="삭제" data-id="${project.id}">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+              <span class="badge-status ${statusClass}">
+                <span class="status-dot"></span>
+                ${statusLabel}
+              </span>
+            </div>
           </div>
           <h2>${escapeHtml(project.title)}</h2>
           <p class="card-desc">${escapeHtml(project.description)}</p>
@@ -1054,6 +1056,10 @@ document.addEventListener("DOMContentLoaded", function () {
   //    비어 있고, init()이 localStorage에 저장해 둔 값으로 판별해야 합니다.
   //    방문자는 ?api=로 들어온 적이 없으므로 이 값이 없습니다.
   const isAdmin = localStorage.getItem('sheet_api_url') !== null;
+
+  // 카드 안의 수정·삭제 버튼은 렌더링 때마다 새로 생기므로 개별 요소가 아니라
+  // body 클래스로 제어합니다 (CSS에서 body.is-admin일 때만 표시).
+  document.body.classList.toggle('is-admin', isAdmin);
 
   // 2. 제어할 HTML 요소(버튼 및 배너)들을 가져옵니다.
   const btnOpenModal = document.getElementById("btn-open-modal");       // "새 프로젝트 추가" 버튼
