@@ -678,7 +678,7 @@ body.is-admin .card-admin-tools {
   display: flex;
   gap: 12px;
 }
-.app-footer .copyright {
+.copyright {
   text-align: center;
   font-size: 0.8rem;
   color: var(--text-muted);
