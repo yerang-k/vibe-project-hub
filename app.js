@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statTotal = document.getElementById('stat-total');
   const statCompleted = document.getElementById('stat-completed');
   const statProgress = document.getElementById('stat-progress');
+  const statIdea = document.getElementById('stat-idea');
 
   // Footer Actions
   const btnCopyJson = document.getElementById('btn-copy-json');
@@ -377,10 +378,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const total = projects.length;
     const completed = projects.filter(p => p.status === 'completed').length;
     const progress = projects.filter(p => p.status === 'in-progress').length;
+    const idea = projects.filter(p => p.status === 'idea').length;
 
     statTotal.textContent = total;
     statCompleted.textContent = completed;
     statProgress.textContent = progress;
+    statIdea.textContent = idea;
   }
 
   // 5. Helper Utilities
