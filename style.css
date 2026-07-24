@@ -266,6 +266,7 @@ a {
 }
 .text-completed { color: var(--color-completed); }
 .text-progress { color: var(--color-in-progress); }
+.text-idea { color: var(--color-idea); }
 
 /* 5. Control Bar (Filters & Search) */
 .control-bar {
