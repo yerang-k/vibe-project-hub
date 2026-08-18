@@ -12,12 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 용도(폴더) 분류 ---
   // 형식(Web App/GAS)이 아니라 "무엇에 쓰는 앱인지"로 묶는다.
   const PURPOSE_ORDER = ['수업·학습', '교무·행정', '자료·참고', '행사·이벤트', '개인·생활'];
+  // 값은 Lucide 아이콘 이름 (페이지 톤에 맞춘 얇은 라인 아이콘)
   const PURPOSE_META = {
-    '수업·학습': '📚',
-    '교무·행정': '🏫',
-    '자료·참고': '🗂️',
-    '행사·이벤트': '🎉',
-    '개인·생활': '🧳',
+    '수업·학습': 'graduation-cap',
+    '교무·행정': 'briefcase',
+    '자료·참고': 'archive',
+    '행사·이벤트': 'calendar-days',
+    '개인·생활': 'coffee',
   };
 
   // 기존 13개 앱은 시트의 category가 아직 옛 형식값이라, id로 용도를 지정한다.
@@ -427,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <i data-lucide="arrow-left"></i> 전체 폴더
         </button>
         <div class="folder-open-head">
-          <span class="folder-open-emoji">${PURPOSE_META[currentFolder] || '📁'}</span>
+          <i data-lucide="${PURPOSE_META[currentFolder] || 'folder'}" class="folder-open-icon"></i>
           <span class="folder-open-name">${escapeHtml(currentFolder)}</span>
           <span class="folder-count">${items.length}</span>
         </div>
@@ -440,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="folder-tiles">
           ${folderNames.map(name => `
             <button type="button" class="folder-tile" data-folder="${escapeHtml(name)}">
-              <span class="folder-tile-emoji">${PURPOSE_META[name] || '📁'}</span>
+              <i data-lucide="${PURPOSE_META[name] || 'folder'}" class="folder-tile-icon"></i>
               <span class="folder-tile-name">${escapeHtml(name)}</span>
               <span class="folder-tile-count">${groups.get(name).length}개</span>
             </button>

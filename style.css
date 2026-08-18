@@ -414,7 +414,14 @@ a {
   background: var(--bg-card-hover);
   border-color: var(--border-hover);
 }
-.folder-tile-emoji { font-size: 2.8rem; line-height: 1; }
+.folder-tile-icon {
+  width: 42px;
+  height: 42px;
+  color: var(--text-secondary);
+  stroke-width: 1.5;
+  transition: color 0.15s ease;
+}
+.folder-tile:hover .folder-tile-icon { color: var(--text-primary); }
 .folder-tile-name {
   font-family: var(--font-display);
   font-weight: 700;
@@ -443,7 +450,12 @@ a {
 .folder-back:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 .folder-back i { width: 16px; height: 16px; }
 .folder-open-head { display: flex; align-items: center; gap: 10px; }
-.folder-open-emoji { font-size: 1.6rem; }
+.folder-open-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary);
+  stroke-width: 1.5;
+}
 .folder-open-name {
   font-family: var(--font-display);
   font-weight: 700;
