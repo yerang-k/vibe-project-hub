@@ -7,6 +7,39 @@ document.addEventListener('DOMContentLoaded', () => {
   let projects = [];
   let currentFilterStatus = 'all';
   let currentSearchQuery = '';
+  let currentFolder = null; // null = 폴더 목록 화면, 값 = 그 폴더 안을 보는 중
+
+  // --- 용도(폴더) 분류 ---
+  // 형식(Web App/GAS)이 아니라 "무엇에 쓰는 앱인지"로 묶는다.
+  const PURPOSE_ORDER = ['수업·학습', '교무·행정', '자료·참고', '행사·이벤트', '개인·생활'];
+  const PURPOSE_META = {
+    '수업·학습': '📚',
+    '교무·행정': '🏫',
+    '자료·참고': '🗂️',
+    '행사·이벤트': '🎉',
+    '개인·생활': '🧳',
+  };
+
+  // 기존 13개 앱은 시트의 category가 아직 옛 형식값이라, id로 용도를 지정한다.
+  // ponytail: 이 id 지도는 레거시 13행을 위한 일회용 다리다. 새로 등록하는
+  // 앱은 드롭다운에서 고른 용도가 category에 저장되므로 지도가 필요 없다.
+  // 레거시 행들을 용도로 한 번씩 다시 저장하면 이 지도는 삭제해도 된다.
+  const PURPOSE_BY_ID = {
+    1787038818779: '자료·참고',   // 선생님의 AI 활용 자료 정리
+    1786972088506: '행사·이벤트', // 훈민정음 대탈출
+    1786507996213: '수업·학습',   // 탐구 여정 내비게이터
+    1785412828931: '교무·행정',   // 정보부 스마트 지원 센터
+    1784992840859: '수업·학습',   // 국어 수업용 슬라이드 에디터
+    1784254469227: '교무·행정',   // 통합연수등록시스템
+    1784170473448: '교무·행정',   // HWP AI 계획서 생성기
+    1783872218509: '교무·행정',   // 카페 주문 수합 앱
+    1783871686681: '개인·생활',   // 후쿠오카 가족 여행 지도
+    1783869549436: '수업·학습',   // 바른 글AI
+    1783869039649: '수업·학습',   // 수행평가 점수 확인 앱
+    1783868963876: '교무·행정',   // 교사도우미
+    1783868771469: '수업·학습',   // 음운 변동 퀴즈 앱
+  };
+  const purposeOf = (p) => PURPOSE_BY_ID[p.id] || p.category || '기타';
 
   // 2. DOM Elements
   const projectsGrid = document.getElementById('projects-grid');
@@ -368,26 +401,53 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     };
 
-    // Group by category, preserving first-seen order
+    // Group into purpose folders
     const groups = new Map();
     filteredProjects.forEach(p => {
-      const cat = (p.category || '기타').trim() || '기타';
-      if (!groups.has(cat)) groups.set(cat, []);
-      groups.get(cat).push(p);
+      const key = purposeOf(p);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
     });
 
-    projectsGrid.innerHTML = [...groups.entries()].map(([cat, items]) => `
-      <details class="category-folder">
-        <summary class="folder-summary">
-          <i data-lucide="chevron-right" class="folder-chevron"></i>
-          <span class="folder-name">${escapeHtml(cat)}</span>
+    // Folder order: known purposes first, then any extras
+    const folderNames = [
+      ...PURPOSE_ORDER.filter(n => groups.has(n)),
+      ...[...groups.keys()].filter(n => !PURPOSE_ORDER.includes(n)),
+    ];
+
+    if (currentSearchQuery.trim()) {
+      // 검색 중엔 폴더를 파고들 필요 없이 전체에서 바로 찾아 보여준다
+      projectsGrid.innerHTML =
+        `<div class="folder-grid">${filteredProjects.map(renderCard).join('')}</div>`;
+    } else if (currentFolder && groups.has(currentFolder)) {
+      // 폴더 안 화면
+      const items = groups.get(currentFolder);
+      projectsGrid.innerHTML = `
+        <button type="button" class="folder-back">
+          <i data-lucide="arrow-left"></i> 전체 폴더
+        </button>
+        <div class="folder-open-head">
+          <span class="folder-open-emoji">${PURPOSE_META[currentFolder] || '📁'}</span>
+          <span class="folder-open-name">${escapeHtml(currentFolder)}</span>
           <span class="folder-count">${items.length}</span>
-        </summary>
-        <div class="folder-grid">
-          ${items.map(renderCard).join('')}
         </div>
-      </details>
-    `).join('');
+        <div class="folder-grid">${items.map(renderCard).join('')}</div>
+      `;
+    } else {
+      // 폴더 목록(홈) 화면 — 폴더 아이콘만 보여준다
+      currentFolder = null;
+      projectsGrid.innerHTML = `
+        <div class="folder-tiles">
+          ${folderNames.map(name => `
+            <button type="button" class="folder-tile" data-folder="${escapeHtml(name)}">
+              <span class="folder-tile-emoji">${PURPOSE_META[name] || '📁'}</span>
+              <span class="folder-tile-name">${escapeHtml(name)}</span>
+              <span class="folder-tile-count">${groups.get(name).length}개</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
 
     // Re-initialize icons inside dynamic elements
     lucide.createIcons();
@@ -632,6 +692,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle Edit & Delete via Event Delegation
     projectsGrid.addEventListener('click', (e) => {
+      // 폴더 열기 / 나가기
+      const tile = e.target.closest('.folder-tile');
+      if (tile) { currentFolder = tile.dataset.folder; render(); return; }
+      if (e.target.closest('.folder-back')) { currentFolder = null; render(); return; }
+
       const btnEdit = e.target.closest('.btn-edit');
       const btnDelete = e.target.closest('.btn-delete');
 
@@ -793,53 +858,9 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(updateChipHighlights, 50); // Small delay to let input render
     });
 
-    // Auto-detect project category based on url or tech stack
-    function autoDetectCategory(techs, url) {
-      const urlLower = (url || '').toLowerCase();
-      const techsLower = techs.map(t => t.toLowerCase());
-
-      // 1. Automation / GAS
-      if (urlLower.includes('script.google.com') || techsLower.includes('google apps script') || techsLower.includes('gas')) {
-        return 'Automation / GAS';
-      }
-      
-      // 2. Bot / CLI
-      if (techsLower.includes('discord.js') || techsLower.includes('discord.py') || techsLower.includes('python-telegram-bot') || techsLower.includes('cli') || techsLower.includes('shell') || techsLower.includes('bash')) {
-        return 'Bot / CLI';
-      }
-
-      // 3. Chrome Extension
-      if (techsLower.includes('chrome extension') || techsLower.includes('chrome-extension') || techsLower.includes('extension')) {
-        return 'Chrome Extension';
-      }
-
-      // 4. Desktop App
-      if (techsLower.includes('electron') || techsLower.includes('tauri') || techsLower.includes('pyqt') || techsLower.includes('tkinter') || techsLower.includes('desktop app')) {
-        return 'Desktop App';
-      }
-
-      // 5. Web App (Default fallback if typical web techs or streamlit are found)
-      if (
-        urlLower.includes('netlify.app') || 
-        urlLower.includes('vercel.app') || 
-        urlLower.includes('github.io') || 
-        urlLower.includes('streamlit.app') ||
-        techsLower.includes('react') ||
-        techsLower.includes('vue') ||
-        techsLower.includes('svelte') ||
-        techsLower.includes('next.js') ||
-        techsLower.includes('vite') ||
-        techsLower.includes('streamlit') ||
-        techsLower.includes('typescript')
-      ) {
-        return 'Web App';
-      }
-
-      // General web files
-      if (techsLower.includes('html') || techsLower.includes('javascript') || techsLower.includes('css')) {
-        return 'Web App';
-      }
-
+    // 카테고리는 이제 "용도"라 기술 스택으로 자동 추정할 수 없다.
+    // 사용자가 드롭다운에서 직접 고르도록 자동 지정을 끈다(항상 null).
+    function autoDetectCategory() {
       return null;
     }
 
