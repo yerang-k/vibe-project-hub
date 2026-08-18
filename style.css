@@ -384,10 +384,59 @@ a {
 
 /* 6. Projects Card Grid */
 .projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 200px;
+}
+
+/* Category Folders (collapsible <details>) */
+.category-folder {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+.folder-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+.folder-summary:hover { background: var(--bg-card-hover); }
+.folder-summary::-webkit-details-marker { display: none; }
+.folder-chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.category-folder[open] .folder-chevron { transform: rotate(90deg); }
+.folder-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+.folder-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+.folder-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 24px;
-  min-height: 200px;
+  padding: 0 20px 20px;
 }
 
 /* Loading & Empty State */
@@ -448,16 +497,9 @@ a {
 /* Card Header */
 .card-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
   margin-bottom: 12px;
-}
-.card-category {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--neon-purple);
-  letter-spacing: 0.05em;
 }
 
 /* Badges for status */

@@ -288,8 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Map projects to HTML cards
-    projectsGrid.innerHTML = filteredProjects.map(project => {
+    // Build a single card's HTML (grouped into category folders below)
+    const renderCard = (project) => {
       // Status mapping
       let statusClass = 'idea';
       let statusLabel = '아이디어';
@@ -326,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <article class="project-card glass-card" data-id="${project.id}">
           <div class="card-header">
-            <span class="card-category">${escapeHtml(project.category || '기타')}</span>
             <div class="card-header-right">
               <div class="card-admin-tools">
                 <button type="button" class="btn-admin-icon btn-edit" title="수정" data-id="${project.id}">
@@ -367,7 +366,28 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </article>
       `;
-    }).join('');
+    };
+
+    // Group by category, preserving first-seen order
+    const groups = new Map();
+    filteredProjects.forEach(p => {
+      const cat = (p.category || '기타').trim() || '기타';
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(p);
+    });
+
+    projectsGrid.innerHTML = [...groups.entries()].map(([cat, items]) => `
+      <details class="category-folder">
+        <summary class="folder-summary">
+          <i data-lucide="chevron-right" class="folder-chevron"></i>
+          <span class="folder-name">${escapeHtml(cat)}</span>
+          <span class="folder-count">${items.length}</span>
+        </summary>
+        <div class="folder-grid">
+          ${items.map(renderCard).join('')}
+        </div>
+      </details>
+    `).join('');
 
     // Re-initialize icons inside dynamic elements
     lucide.createIcons();
