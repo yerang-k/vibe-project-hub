@@ -340,8 +340,12 @@ document.addEventListener('DOMContentLoaded', () => {
         .map(tech => `<span class="tag-tech">${tech.trim()}</span>`)
         .join('');
 
-      // Links validity
-      const demoClass = project.demoUrl ? '' : 'disabled';
+      // Links validity — 학교 도메인 전용 데모(/a/macros/도메인/)는 외부 방문자가
+      // 로그인 벽에 막혀 못 여니, 비관리자에게는 데모 버튼을 비활성 처리한다.
+      const isAdmin = localStorage.getItem('sheet_api_url') !== null;
+      const demoLocked = /script\.google\.com\/a\/macros\//.test(project.demoUrl || '') && !isAdmin;
+      const demoUsable = !!project.demoUrl && !demoLocked;
+      const demoClass = demoUsable ? '' : 'disabled';
       const repoClass = project.repoUrl ? '' : 'disabled';
 
       // Prompt section (if exists)
@@ -390,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span>${escapeHtml(project.aiTools || 'AI 비지정')}</span>
             </div>
             <div class="action-links">
-              <a href="${project.demoUrl || '#'}" class="action-link ${demoClass}" target="_blank" rel="noopener">
+              <a href="${demoUsable ? project.demoUrl : '#'}" class="action-link ${demoClass}" target="_blank" rel="noopener">
                 <i data-lucide="external-link"></i> 데모
               </a>
               <a href="${project.repoUrl || '#'}" class="action-link ${repoClass}" target="_blank" rel="noopener">
