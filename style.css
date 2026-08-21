@@ -1014,4 +1014,20 @@ body.is-admin .card-admin-tools {
   .folder-tile-icon { width: 36px; height: 36px; }
   /* 폴더 안·검색 결과 카드는 한 열로 (좁은 화면에서 넘침 방지) */
   .folder-grid { grid-template-columns: 1fr; }
+
+  /* 필터 4개(전체·완료·개발중·아이디어)를 한 줄에 균등 배치 (아이콘 숨김) */
+  .filter-group {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .filter-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 4px;
+    font-size: 0.8rem;
+    gap: 0;
+    white-space: nowrap;
+  }
+  .filter-btn i,
+  .filter-btn svg { display: none; }
 }
