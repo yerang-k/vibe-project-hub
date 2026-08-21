@@ -48,6 +48,10 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden; /* 장식 glow 등 화면 밖 요소로 가로 스크롤 생기는 것 차단 */
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-main);
@@ -961,7 +965,15 @@ body.is-admin .card-admin-tools {
   .stats-board {
     width: 100%;
     justify-content: space-between;
+    gap: 8px;
   }
+  .stat-item {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 6px;
+  }
+  .stat-value { font-size: 1.5rem; }
+  .stat-label { font-size: 0.72rem; }
   .control-bar {
     flex-direction: column;
     align-items: stretch;
@@ -985,4 +997,21 @@ body.is-admin .card-admin-tools {
   .sync-actions {
     justify-content: flex-end;
   }
+}
+
+/* 폰 전용 미세 조정 */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 24px 16px;
+    gap: 28px;
+  }
+  /* 폴더는 목록이 아니라 2열 아이콘 그리드로 (폴더다움 유지) */
+  .folder-tiles {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .folder-tile { padding: 22px 10px 18px; }
+  .folder-tile-icon { width: 36px; height: 36px; }
+  /* 폴더 안·검색 결과 카드는 한 열로 (좁은 화면에서 넘침 방지) */
+  .folder-grid { grid-template-columns: 1fr; }
 }
