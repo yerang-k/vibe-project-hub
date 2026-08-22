@@ -466,6 +466,35 @@ a {
   font-size: 1.25rem;
   color: var(--text-primary);
 }
+/* 폴더 안 카드/목록 전환 */
+.layout-toggle {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  padding: 3px;
+}
+.layout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.layout-btn i { width: 17px; height: 17px; }
+.layout-btn:hover { color: var(--text-primary); }
+.layout-btn.active {
+  background: var(--grad-primary);
+  color: white;
+}
 .folder-count {
   font-size: 0.8rem;
   font-weight: 600;

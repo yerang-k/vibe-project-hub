@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentSearchQuery = '';
   let currentFolder = null; // null = 폴더 목록 화면, 값 = 그 폴더 안을 보는 중
   let currentView = localStorage.getItem('vibe_view') || 'folders'; // 'folders' | 'list'(전체 목록)
+  let currentLayout = localStorage.getItem('vibe_layout') || 'cards'; // 폴더 안 보기: 'cards' | 'list'
 
   // --- 용도(폴더) 분류 ---
   // 형식(Web App/GAS)이 아니라 "무엇에 쓰는 앱인지"로 묶는다.
@@ -328,9 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 전체 목록 보기: 폴더 없이 모든 앱을 한 페이지에 목록(행)으로 보여준다.
-    if (currentView === 'list') {
-      const renderRow = (project) => {
+    // 앱 한 개를 목록(행)으로 렌더 (전체 목록 + 폴더 안 목록 보기 공용)
+    const renderRow = (project) => {
         let statusClass = 'idea', statusLabel = '아이디어';
         if (project.status === 'completed') { statusClass = 'completed'; statusLabel = '완료'; }
         else if (project.status === 'in-progress') { statusClass = 'in-progress'; statusLabel = '개발 중'; }
@@ -360,7 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <a href="${project.repoUrl || '#'}" class="action-link ${repoClass}" target="_blank" rel="noopener"><svg class="icon-github" viewBox="0 0 16 16" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> 깃허브</a>
             </div>
           </div>`;
-      };
+    };
+
+    // 전체 목록 보기: 폴더 없이 모든 앱을 한 페이지에 목록으로
+    if (currentView === 'list') {
       projectsGrid.innerHTML = `<div class="app-list">${filteredProjects.map(renderRow).join('')}</div>`;
       lucide.createIcons();
       return;
@@ -472,8 +475,12 @@ document.addEventListener('DOMContentLoaded', () => {
       projectsGrid.innerHTML =
         `<div class="folder-grid">${filteredProjects.map(renderCard).join('')}</div>`;
     } else if (currentFolder && groups.has(currentFolder)) {
-      // 폴더 안 화면
+      // 폴더 안 화면 — 카드 또는 목록 레이아웃
       const items = groups.get(currentFolder);
+      const body = currentLayout === 'list'
+        ? `<div class="app-list">${items.map(renderRow).join('')}</div>`
+        : `<p class="reorder-hint">손잡이 <i data-lucide="grip-vertical"></i> 를 끌어 순서를 바꿀 수 있어요</p>
+           <div class="folder-grid reorderable">${items.map(renderCard).join('')}</div>`;
       projectsGrid.innerHTML = `
         <button type="button" class="folder-back">
           <i data-lucide="arrow-left"></i> 전체 폴더
@@ -482,9 +489,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <i data-lucide="${PURPOSE_META[currentFolder] || 'folder'}" class="folder-open-icon"></i>
           <span class="folder-open-name">${escapeHtml(currentFolder)}</span>
           <span class="folder-count">${items.length}</span>
+          <div class="layout-toggle">
+            <button type="button" class="layout-btn ${currentLayout === 'cards' ? 'active' : ''}" data-layout="cards" title="카드로 보기"><i data-lucide="layout-grid"></i></button>
+            <button type="button" class="layout-btn ${currentLayout === 'list' ? 'active' : ''}" data-layout="list" title="목록으로 보기"><i data-lucide="list"></i></button>
+          </div>
         </div>
-        <p class="reorder-hint">손잡이 <i data-lucide="grip-vertical"></i> 를 끌어 순서를 바꿀 수 있어요</p>
-        <div class="folder-grid reorderable">${items.map(renderCard).join('')}</div>
+        ${body}
       `;
     } else {
       // 폴더 목록(홈) 화면 — 폴더 아이콘만 보여준다
@@ -885,6 +895,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const tile = e.target.closest('.folder-tile');
       if (tile) { currentFolder = tile.dataset.folder; render(); return; }
       if (e.target.closest('.folder-back')) { currentFolder = null; render(); return; }
+
+      const layoutBtn = e.target.closest('.layout-btn');
+      if (layoutBtn) {
+        currentLayout = layoutBtn.dataset.layout;
+        localStorage.setItem('vibe_layout', currentLayout);
+        render();
+        return;
+      }
 
       const btnEdit = e.target.closest('.btn-edit');
       const btnDelete = e.target.closest('.btn-delete');
