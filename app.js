@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         c.style.transition = 'none';
         c.style.transform = `translate(${dx}px, ${dy}px)`;
         requestAnimationFrame(() => {
-          c.style.transition = 'transform 200ms ease';
+          c.style.transition = 'transform 300ms ease';
           c.style.transform = '';
         });
       });
