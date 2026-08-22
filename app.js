@@ -477,6 +477,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!grid || localStorage.getItem('sheet_api_url') === null) return;
     let drag = null;
 
+    // 위치가 실제로 바뀔 때만 카드들을 부드럽게(FLIP) 미끄러뜨려 이동시킨다.
+    const applyMove = (ref) => {
+      if (ref === drag.lastRef) return;
+      drag.lastRef = ref;
+      const cards = [...grid.querySelectorAll('.project-card')];
+      const first = new Map(cards.map(c => [c, c.getBoundingClientRect()]));
+      if (ref === 'end') grid.appendChild(drag.card);
+      else grid.insertBefore(drag.card, ref);
+      cards.forEach(c => {
+        const a = first.get(c), b = c.getBoundingClientRect();
+        const dx = a.left - b.left, dy = a.top - b.top;
+        if (!dx && !dy) return;
+        c.style.transition = 'none';
+        c.style.transform = `translate(${dx}px, ${dy}px)`;
+        requestAnimationFrame(() => {
+          c.style.transition = 'transform 200ms ease';
+          c.style.transform = '';
+        });
+      });
+    };
+
     const onMove = (e) => {
       if (!drag) return;
       if (!drag.moved) {
@@ -485,9 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         drag.card.classList.add('dragging');
       }
       e.preventDefault();
-      const ref = cardBeforePoint(grid, e.clientX, e.clientY, drag.card);
-      if (ref === 'end') grid.appendChild(drag.card);
-      else grid.insertBefore(drag.card, ref);
+      applyMove(cardBeforePoint(grid, e.clientX, e.clientY, drag.card));
     };
 
     const onUp = () => {
