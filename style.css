@@ -483,6 +483,94 @@ a {
   gap: 24px;
 }
 
+/* 보기 전환 버튼 (폴더 / 전체 목록) */
+.view-toggle {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 3px;
+}
+.view-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.view-btn i { width: 16px; height: 16px; }
+.view-btn:hover { color: var(--text-primary); }
+.view-btn.active {
+  background: var(--grad-primary);
+  color: white;
+  box-shadow: var(--shadow-neon);
+}
+
+/* 전체 목록 보기 (행 형태) */
+.app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.app-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: var(--transition-smooth);
+}
+.app-row:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+.app-row-main { min-width: 0; flex: 1; }
+.app-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.app-row-head h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.row-category {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.app-row-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
 /* 드래그 순서 변경 (관리자 + 폴더 안 화면에서만) */
 .card-admin-tools .drag-handle { display: none; } /* 기본 숨김 (.btn-admin-icon보다 우선) */
 body.is-admin .reorderable .drag-handle {
@@ -1038,6 +1126,19 @@ body.is-admin .card-admin-tools {
   .folder-tile-icon { width: 36px; height: 36px; }
   /* 폴더 안·검색 결과 카드는 한 열로 (좁은 화면에서 넘침 방지) */
   .folder-grid { grid-template-columns: 1fr; }
+
+  /* 보기 전환 버튼 꽉 차게 */
+  .view-toggle { width: 100%; }
+  .view-btn { flex: 1; justify-content: center; }
+
+  /* 전체 목록 행은 세로로 쌓아 넘침 방지 */
+  .app-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .app-row-desc { white-space: normal; }
+  .app-row-actions { justify-content: flex-end; }
 
   /* 필터 4개(전체·완료·개발중·아이디어)를 한 줄에 균등 배치 (아이콘 숨김) */
   .filter-group {
