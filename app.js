@@ -371,8 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="card-header">
             <div class="card-header-right">
               <div class="card-admin-tools">
-                <button type="button" class="btn-admin-icon btn-bump" title="맨 앞으로 보내기" data-id="${project.id}">
-                  <i data-lucide="arrow-up-to-line"></i>
+                <button type="button" class="btn-admin-icon drag-handle" title="드래그해서 순서 변경" data-id="${project.id}">
+                  <i data-lucide="grip-vertical"></i>
                 </button>
                 <button type="button" class="btn-admin-icon btn-edit" title="수정" data-id="${project.id}">
                   <i data-lucide="edit-3"></i>
@@ -444,7 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="folder-open-name">${escapeHtml(currentFolder)}</span>
           <span class="folder-count">${items.length}</span>
         </div>
-        <div class="folder-grid">${items.map(renderCard).join('')}</div>
+        <p class="reorder-hint">손잡이 <i data-lucide="grip-vertical"></i> 를 끌어 순서를 바꿀 수 있어요</p>
+        <div class="folder-grid reorderable">${items.map(renderCard).join('')}</div>
       `;
     } else {
       // 폴더 목록(홈) 화면 — 폴더 아이콘만 보여준다
@@ -464,6 +465,108 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Re-initialize icons inside dynamic elements
     lucide.createIcons();
+
+    // 폴더 안 화면에서 카드 드래그 순서 변경 활성화 (관리자 전용)
+    if (currentFolder && !currentSearchQuery.trim()) {
+      enableDragReorder(projectsGrid.querySelector('.reorderable'));
+    }
+  }
+
+  // ---- 카드 드래그로 폴더 안 순서 바꾸기 (관리자 전용, 폰·PC 모두) ----
+  function enableDragReorder(grid) {
+    if (!grid || localStorage.getItem('sheet_api_url') === null) return;
+    let drag = null;
+
+    const onMove = (e) => {
+      if (!drag) return;
+      if (!drag.moved) {
+        if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
+        drag.moved = true;
+        drag.card.classList.add('dragging');
+      }
+      e.preventDefault();
+      const ref = cardBeforePoint(grid, e.clientX, e.clientY, drag.card);
+      if (ref === 'end') grid.appendChild(drag.card);
+      else grid.insertBefore(drag.card, ref);
+    };
+
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      if (!drag) return;
+      const moved = drag.moved;
+      drag.card.classList.remove('dragging');
+      drag = null;
+      if (moved) persistOrderFromDom(grid);
+    };
+
+    grid.addEventListener('pointerdown', (e) => {
+      if (e.button != null && e.button > 0) return; // 왼쪽 버튼/터치만
+      const handle = e.target.closest('.drag-handle');
+      if (!handle) return;
+      const card = handle.closest('.project-card');
+      if (!card) return;
+      e.preventDefault();
+      drag = { card, sx: e.clientX, sy: e.clientY, moved: false };
+      handle.setPointerCapture(e.pointerId);
+      window.addEventListener('pointermove', onMove, { passive: false });
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
+    });
+  }
+
+  // 포인터 위치에서 드래그 카드를 그 '앞'에 넣을 기준 카드를 찾는다(없으면 'end').
+  function cardBeforePoint(grid, x, y, exclude) {
+    const cards = [...grid.querySelectorAll('.project-card')].filter(c => c !== exclude);
+    let best = null, bestDist = Infinity, before = 'end';
+    for (const c of cards) {
+      const r = c.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const d = Math.hypot(x - cx, y - cy);
+      if (d < bestDist) {
+        bestDist = d;
+        before = (y < cy || (Math.abs(y - cy) < 6 && x < cx)) ? c : c.nextElementSibling;
+      }
+    }
+    return before || 'end';
+  }
+
+  // DOM에 나타난 새 순서대로 createdAt를 내림차순 재부여하고 시트/로컬에 저장한다.
+  async function persistOrderFromDom(grid) {
+    const ids = [...grid.querySelectorAll('.project-card')].map(c => Number(c.dataset.id));
+    const base = Date.now();
+    ids.forEach((id, i) => {
+      const p = projects.find(x => x.id === id);
+      if (p) p.createdAt = new Date(base - i * 60000).toISOString();
+    });
+
+    const changed = ids.map(id => projects.find(x => x.id === id)).filter(Boolean);
+    const sheetApiUrl = getSheetApiUrl();
+
+    if (sheetApiUrl) {
+      showToast('순서를 저장하는 중...');
+      try {
+        for (const p of changed) {
+          const res = await fetch(sheetApiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'update', data: p }),
+            headers: { 'Content-Type': 'text/plain' },
+            redirect: 'follow'
+          });
+          if (!res.ok || (await res.json()).status !== 'success') {
+            showToast('순서 저장 중 오류가 발생했습니다.');
+            break;
+          }
+        }
+        showToast('순서가 저장되었습니다.');
+      } catch (err) {
+        console.error('Reorder save error:', err);
+        showToast('네트워크 오류: 순서를 저장하지 못했습니다.');
+      }
+    }
+    saveToLocalStorage();
+    render();
   }
 
   // Update top statistics panel
@@ -710,13 +813,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tile) { currentFolder = tile.dataset.folder; render(); return; }
       if (e.target.closest('.folder-back')) { currentFolder = null; render(); return; }
 
-      const btnBump = e.target.closest('.btn-bump');
       const btnEdit = e.target.closest('.btn-edit');
       const btnDelete = e.target.closest('.btn-delete');
 
-      if (btnBump) {
-        bumpToFront(parseInt(btnBump.dataset.id));
-      } else if (btnEdit) {
+      if (btnEdit) {
         const id = parseInt(btnEdit.dataset.id);
         openEditModal(id);
       } else if (btnDelete) {
@@ -755,50 +855,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Update tech chips visual status
       setTimeout(updateChipHighlights, 50);
-    }
-
-    // '맨 앞으로 보내기' — createdAt를 현재 시각으로 갱신해 자기 폴더 맨 앞에 오게 한다.
-    async function bumpToFront(id) {
-      const project = projects.find(p => p.id === id);
-      if (!project) return;
-
-      const updated = { ...project, createdAt: new Date().toISOString() };
-      const sheetApiUrl = getSheetApiUrl();
-
-      const applyLocal = () => {
-        const idx = projects.findIndex(p => p.id === id);
-        if (idx > -1) projects[idx] = updated;
-        saveToLocalStorage();
-        render();
-        showToast(`"${project.title}" 를 맨 앞으로 옮겼습니다.`);
-      };
-
-      if (sheetApiUrl) {
-        showToast('순서를 저장하는 중...');
-        try {
-          const response = await fetch(sheetApiUrl, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'update', data: updated }),
-            headers: { 'Content-Type': 'text/plain' },
-            redirect: 'follow'
-          });
-          if (response.ok) {
-            const resData = await response.json();
-            if (resData.status === 'success') {
-              applyLocal();
-            } else {
-              showToast('순서 저장 실패: ' + resData.message);
-            }
-          } else {
-            showToast('연동 서버 응답 오류가 발생했습니다.');
-          }
-        } catch (err) {
-          console.error('Bump error:', err);
-          showToast('네트워크 오류: 순서를 저장하지 못했습니다.');
-        }
-      } else {
-        applyLocal();
-      }
     }
 
     // Delete project with confirm check (Hybrid: Local vs Google Sheets API)

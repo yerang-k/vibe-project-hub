@@ -483,6 +483,30 @@ a {
   gap: 24px;
 }
 
+/* 드래그 순서 변경 (관리자 + 폴더 안 화면에서만) */
+.card-admin-tools .drag-handle { display: none; } /* 기본 숨김 (.btn-admin-icon보다 우선) */
+body.is-admin .reorderable .drag-handle {
+  display: inline-flex;
+  cursor: grab;
+  touch-action: none; /* 손잡이에서 터치 시작하면 스크롤 대신 드래그 */
+}
+body.is-admin .reorderable .drag-handle:active { cursor: grabbing; }
+.project-card.dragging {
+  opacity: 0.65;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border-color: var(--neon-purple);
+}
+.reorder-hint {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: -4px 0 -8px;
+}
+.reorder-hint i { width: 14px; height: 14px; }
+body.is-admin .reorder-hint { display: flex; }
+
 /* Loading & Empty State */
 .loading-state, .empty-state {
   grid-column: 1 / -1;
