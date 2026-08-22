@@ -310,6 +310,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return matchesStatus && matchesSearch;
     });
 
+    // 표시 순서: createdAt 내림차순 (안정 정렬). '맨 앞으로 보내기'가 createdAt를
+    // 현재 시각으로 바꿔, 그 앱이 자기 폴더 맨 앞에 오도록 한다.
+    filteredProjects.sort((a, b) =>
+      String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
     // Empty state check
     if (filteredProjects.length === 0) {
       projectsGrid.innerHTML = `
@@ -366,6 +371,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="card-header">
             <div class="card-header-right">
               <div class="card-admin-tools">
+                <button type="button" class="btn-admin-icon btn-bump" title="맨 앞으로 보내기" data-id="${project.id}">
+                  <i data-lucide="arrow-up-to-line"></i>
+                </button>
                 <button type="button" class="btn-admin-icon btn-edit" title="수정" data-id="${project.id}">
                   <i data-lucide="edit-3"></i>
                 </button>
@@ -702,10 +710,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tile) { currentFolder = tile.dataset.folder; render(); return; }
       if (e.target.closest('.folder-back')) { currentFolder = null; render(); return; }
 
+      const btnBump = e.target.closest('.btn-bump');
       const btnEdit = e.target.closest('.btn-edit');
       const btnDelete = e.target.closest('.btn-delete');
 
-      if (btnEdit) {
+      if (btnBump) {
+        bumpToFront(parseInt(btnBump.dataset.id));
+      } else if (btnEdit) {
         const id = parseInt(btnEdit.dataset.id);
         openEditModal(id);
       } else if (btnDelete) {
@@ -744,6 +755,50 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Update tech chips visual status
       setTimeout(updateChipHighlights, 50);
+    }
+
+    // '맨 앞으로 보내기' — createdAt를 현재 시각으로 갱신해 자기 폴더 맨 앞에 오게 한다.
+    async function bumpToFront(id) {
+      const project = projects.find(p => p.id === id);
+      if (!project) return;
+
+      const updated = { ...project, createdAt: new Date().toISOString() };
+      const sheetApiUrl = getSheetApiUrl();
+
+      const applyLocal = () => {
+        const idx = projects.findIndex(p => p.id === id);
+        if (idx > -1) projects[idx] = updated;
+        saveToLocalStorage();
+        render();
+        showToast(`"${project.title}" 를 맨 앞으로 옮겼습니다.`);
+      };
+
+      if (sheetApiUrl) {
+        showToast('순서를 저장하는 중...');
+        try {
+          const response = await fetch(sheetApiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'update', data: updated }),
+            headers: { 'Content-Type': 'text/plain' },
+            redirect: 'follow'
+          });
+          if (response.ok) {
+            const resData = await response.json();
+            if (resData.status === 'success') {
+              applyLocal();
+            } else {
+              showToast('순서 저장 실패: ' + resData.message);
+            }
+          } else {
+            showToast('연동 서버 응답 오류가 발생했습니다.');
+          }
+        } catch (err) {
+          console.error('Bump error:', err);
+          showToast('네트워크 오류: 순서를 저장하지 못했습니다.');
+        }
+      } else {
+        applyLocal();
+      }
     }
 
     // Delete project with confirm check (Hybrid: Local vs Google Sheets API)
