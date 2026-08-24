@@ -1103,32 +1103,48 @@ body.is-admin .card-admin-tools {
     flex-direction: column;
     align-items: flex-start;
   }
+  /* 통계 카드 작게 */
   .stats-board {
     width: 100%;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
   }
   .stat-item {
     flex: 1;
     min-width: 0;
-    padding: 12px 6px;
+    padding: 8px 4px;
   }
-  .stat-value { font-size: 1.5rem; }
-  .stat-label { font-size: 0.72rem; }
+  .stat-value { font-size: 1.2rem; }
+  .stat-label { font-size: 0.62rem; }
+
+  /* [폴더][전체목록] 토글 + 검색창을 한 줄에, 필터는 아래 줄로 */
   .control-bar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
   }
+  .view-toggle { order: 1; flex-shrink: 0; padding: 2px; }
+  .view-btn { padding: 6px 10px; font-size: 0.82rem; }
   .search-box {
-    width: 100%;
+    order: 2;
+    flex: 1;
+    min-width: 0;
+    width: auto;
   }
+  .search-box input {
+    padding: 10px 12px 10px 36px; /* 검색창 작게, 토글과 높이 맞춤 */
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+  .search-icon { left: 12px; width: 16px; height: 16px; }
   .filter-group {
     order: 3;
     width: 100%;
     justify-content: flex-start;
   }
   .btn-primary {
-    order: 2;
+    order: 4;
     width: 100%;
   }
   .sync-banner {
@@ -1155,10 +1171,6 @@ body.is-admin .card-admin-tools {
   .folder-tile-icon { width: 36px; height: 36px; }
   /* 폴더 안·검색 결과 카드는 한 열로 (좁은 화면에서 넘침 방지) */
   .folder-grid { grid-template-columns: 1fr; }
-
-  /* 보기 전환 버튼 꽉 차게 */
-  .view-toggle { width: 100%; }
-  .view-btn { flex: 1; justify-content: center; }
 
   /* 전체 목록 행은 세로로 쌓아 넘침 방지 */
   .app-row {
