@@ -299,17 +299,19 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStats();
 
     // Filter projects
+    const isAdminView = localStorage.getItem('sheet_api_url') !== null;
     const filteredProjects = projects.filter(project => {
       const matchesStatus = currentFilterStatus === 'all' || project.status === currentFilterStatus;
-      
+      const matchesVisibility = isAdminView || project.isPublic !== 'N';
+
       const query = currentSearchQuery.toLowerCase().trim();
-      const matchesSearch = !query || 
+      const matchesSearch = !query ||
         project.title.toLowerCase().includes(query) ||
         project.description.toLowerCase().includes(query) ||
         project.techStack.some(tech => tech.toLowerCase().includes(query)) ||
         (project.aiTools && project.aiTools.toLowerCase().includes(query));
 
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesVisibility && matchesSearch;
     });
 
     // 표시 순서: createdAt 내림차순 (안정 정렬). '맨 앞으로 보내기'가 createdAt를
@@ -336,6 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (project.status === 'in-progress') { statusClass = 'in-progress'; statusLabel = '개발 중'; }
 
         const isAdmin = localStorage.getItem('sheet_api_url') !== null;
+        const privateBadge = (isAdmin && project.isPublic === 'N')
+          ? '<span class="badge-status private"><span class="status-dot"></span>비공개</span>' : '';
         const demoLocked = /script\.google\.com\/a\/macros\//.test(project.demoUrl || '') && !isAdmin;
         const demoUsable = !!project.demoUrl && !demoLocked;
         const demoClass = demoUsable ? '' : 'disabled';
@@ -348,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3>${escapeHtml(project.title)}</h3>
                 <span class="row-category">${escapeHtml(purposeOf(project))}</span>
                 <span class="badge-status ${statusClass}"><span class="status-dot"></span>${statusLabel}</span>
+                ${privateBadge}
               </div>
               <p class="app-row-desc">${escapeHtml(project.description)}</p>
             </div>
@@ -394,6 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const demoUsable = !!project.demoUrl && !demoLocked;
       const demoClass = demoUsable ? '' : 'disabled';
       const repoClass = project.repoUrl ? '' : 'disabled';
+      const privateBadge = (isAdmin && project.isPublic === 'N')
+        ? '<span class="badge-status private"><span class="status-dot"></span>비공개</span>' : '';
 
       // Prompt section (if exists)
       const promptSectionHtml = project.promptSummary 
@@ -427,6 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="status-dot"></span>
                 ${statusLabel}
               </span>
+              ${privateBadge}
             </div>
           </div>
           <h2>${escapeHtml(project.title)}</h2>
@@ -748,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const promptSummary = document.getElementById('proj-prompt').value;
       let demoUrl = document.getElementById('proj-demo').value.trim();
       let repoUrl = document.getElementById('proj-repo').value.trim();
+      const isPublic = document.getElementById('proj-public').checked ? 'Y' : 'N';
 
       if (demoUrl) demoUrl = formatUrl(demoUrl);
       if (repoUrl) repoUrl = formatUrl(repoUrl);
@@ -784,6 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
           promptSummary,
           demoUrl,
           repoUrl,
+          isPublic,
           createdAt
         };
 
@@ -843,7 +853,8 @@ document.addEventListener('DOMContentLoaded', () => {
               aiTools,
               promptSummary,
               demoUrl,
-              repoUrl
+              repoUrl,
+              isPublic
             };
             saveToLocalStorage();
             render();
@@ -864,6 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
             promptSummary,
             demoUrl,
             repoUrl,
+            isPublic,
             createdAt: new Date().toISOString().split('T')[0]
           };
 
@@ -932,6 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('proj-prompt').value = project.promptSummary || '';
       document.getElementById('proj-demo').value = project.demoUrl || '';
       document.getElementById('proj-repo').value = project.repoUrl || '';
+      document.getElementById('proj-public').checked = project.isPublic !== 'N';
 
       // UI Text dynamic change
       document.querySelector('.modal-header h2').innerHTML = '<i data-lucide="edit-3"></i> 프로젝트 정보 수정';

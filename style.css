@@ -712,6 +712,11 @@ body.is-admin .reorder-hint { display: flex; }
   color: var(--color-idea);
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
+.badge-status.private {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
 .status-dot {
   width: 6px;
   height: 6px;
@@ -1003,6 +1008,18 @@ body.is-admin .card-admin-tools {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
+}
+.checkbox-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 .form-group input, .form-group textarea, .form-group select {
   padding: 10px 12px;
