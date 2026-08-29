@@ -809,6 +809,12 @@ body.is-admin .card-admin-tools {
   opacity: 1;
   transform: translateY(0);
 }
+/* 목록(행) 보기는 카드처럼 겹쳐 뜨는 오버레이가 아니라 줄 안에 자리를 차지하므로
+   호버로 숨길 필요가 없다 — 항상 보이게 둔다 (모바일은 호버가 없어서 더더욱 필요) */
+.app-row .card-admin-tools {
+  opacity: 1;
+  transform: none;
+}
 .btn-admin-icon {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border-color);
