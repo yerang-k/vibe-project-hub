@@ -81,7 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnShareSettings = document.getElementById('btn-share-settings');
   const settingsModal = document.getElementById('settings-modal');
   const settingsApiUrlInput = document.getElementById('settings-api-url');
+  const settingsAdminTokenInput = document.getElementById('settings-admin-token');
 
+  // 이 URL은 더 이상 비밀이 아닙니다 — 읽기 전용 기본 API 주소일 뿐입니다.
+  // 실제 쓰기(추가·수정·삭제) 권한은 관리자 토큰(sheet_admin_token)으로만 결정되며,
+  // 그 토큰은 GAS 프로젝트의 Script Properties에만 저장되어 이 소스코드에는 절대 포함되지 않습니다.
   const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbwnLDMELObAxmve5uoGoTIkCW7JdGJgdlqSGeyEma06Zr2KsUG3_2ujV6eVa0_lWFhAFQ/exec';
 
   // Get active Sheet API URL (Local Storage preference OR Default hardcoded GAS Web App URL)
@@ -94,6 +98,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return DEFAULT_API_URL; // Fallback default
     }
     return saved; // User custom URL
+  }
+
+  // 관리자 토큰 (쓰기 요청 인증용 — GAS 쪽 Script Properties의 ADMIN_TOKEN과 대조됩니다)
+  function getAdminToken() {
+    const saved = localStorage.getItem('sheet_admin_token');
+    if (!saved || saved === 'none') return '';
+    return saved;
+  }
+
+  // 화면에 관리자용 UI(추가/수정/삭제 버튼 등)를 보여줄지 결정하는 값입니다.
+  // 어디까지나 UI 표시용 판단일 뿐, 실제 쓰기 권한은 서버(GAS)의 토큰 검증이 최종 결정합니다.
+  function isAdminSession() {
+    return getAdminToken() !== '';
   }
 
   // 3. Init Function
@@ -116,10 +133,25 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (trimmedApi === 'none') {
         localStorage.setItem('sheet_api_url', 'none');
         showToast('구글 시트 연동이 해제되었습니다.');
-        
+
         const cleanUrl = window.location.href.split('?')[0].split('#')[0];
         window.history.replaceState({path: cleanUrl}, '', cleanUrl);
       }
+    }
+
+    // Check URL parameters for admin token auto-save (?token=...)
+    const tokenParam = urlParams.get('token');
+    if (tokenParam) {
+      const trimmedToken = tokenParam.trim();
+      if (trimmedToken === 'none') {
+        localStorage.setItem('sheet_admin_token', 'none');
+        showToast('관리자 모드가 해제되었습니다.');
+      } else if (trimmedToken) {
+        localStorage.setItem('sheet_admin_token', trimmedToken);
+        showToast('관리자 토큰이 자동으로 등록되었습니다!');
+      }
+      const cleanUrl = window.location.href.split('?')[0].split('#')[0];
+      window.history.replaceState({path: cleanUrl}, '', cleanUrl);
     }
 
     updateSyncIndicator();
@@ -182,7 +214,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // Prevent browser cache on GET requests
-      const cacheBustUrl = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+      let cacheBustUrl = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+      const adminToken = getAdminToken();
+      if (adminToken) {
+        // 토큰을 함께 보내면 GAS가 비공개(isPublic='N') 항목까지 포함해 응답합니다.
+        // 토큰이 없으면 GAS가 서버 단에서 비공개 항목을 아예 걸러내고 보냅니다.
+        cacheBustUrl += '&token=' + encodeURIComponent(adminToken);
+      }
       const response = await fetch(cacheBustUrl);
       if (response.ok) {
         const data = await response.json();
@@ -299,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStats();
 
     // Filter projects
-    const isAdminView = localStorage.getItem('sheet_api_url') !== null;
+    const isAdminView = isAdminSession();
     const filteredProjects = projects.filter(project => {
       const matchesStatus = currentFilterStatus === 'all' || project.status === currentFilterStatus;
       const matchesVisibility = isAdminView || project.isPublic !== 'N';
@@ -337,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (project.status === 'completed') { statusClass = 'completed'; statusLabel = '완료'; }
         else if (project.status === 'in-progress') { statusClass = 'in-progress'; statusLabel = '개발 중'; }
 
-        const isAdmin = localStorage.getItem('sheet_api_url') !== null;
+        const isAdmin = isAdminSession();
         const privateBadge = (isAdmin && project.isPublic === 'N')
           ? '<span class="badge-status private"><span class="status-dot"></span>비공개</span>' : '';
         const demoLocked = /script\.google\.com\/a\/macros\//.test(project.demoUrl || '') && !isAdmin;
@@ -394,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Links validity — 학교 도메인 전용 데모(/a/macros/도메인/)는 외부 방문자가
       // 로그인 벽에 막혀 못 여니, 비관리자에게는 데모 버튼을 비활성 처리한다.
-      const isAdmin = localStorage.getItem('sheet_api_url') !== null;
+      const isAdmin = isAdminSession();
       const demoLocked = /script\.google\.com\/a\/macros\//.test(project.demoUrl || '') && !isAdmin;
       const demoUsable = !!project.demoUrl && !demoLocked;
       const demoClass = demoUsable ? '' : 'disabled';
@@ -531,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- 카드 드래그로 폴더 안 순서 바꾸기 (관리자 전용, 폰·PC 모두) ----
   function enableDragReorder(grid) {
-    if (!grid || localStorage.getItem('sheet_api_url') === null) return;
+    if (!grid || !isAdminSession()) return;
     let drag = null;
 
     // 위치가 실제로 바뀔 때만 카드들을 부드럽게(FLIP) 미끄러뜨려 이동시킨다.
@@ -626,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const p of changed) {
           const res = await fetch(sheetApiUrl, {
             method: 'POST',
-            body: JSON.stringify({ action: 'update', data: p }),
+            body: JSON.stringify({ action: 'update', data: p, token: getAdminToken() }),
             headers: { 'Content-Type': 'text/plain' },
             redirect: 'follow'
           });
@@ -799,7 +837,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const payload = {
           action: projIdVal ? 'update' : 'add',
-          data: projectData
+          data: projectData,
+          token: getAdminToken()
         };
 
         try {
@@ -976,7 +1015,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('구글 시트에서 삭제하는 중...');
         const payload = {
           action: 'delete',
-          data: { id: id }
+          data: { id: id },
+          token: getAdminToken()
         };
 
         try {
@@ -1238,6 +1278,11 @@ document.addEventListener('DOMContentLoaded', () => {
       let savedApiUrl = localStorage.getItem('sheet_api_url') || '';
       if (savedApiUrl === 'none') savedApiUrl = '';
       settingsApiUrlInput.value = savedApiUrl;
+
+      if (settingsAdminTokenInput) {
+        settingsAdminTokenInput.value = getAdminToken();
+      }
+
       settingsModal.classList.add('active');
       document.body.style.overflow = 'hidden';
     });
@@ -1267,10 +1312,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       localStorage.setItem('sheet_api_url', url);
+
+      // 관리자 토큰: 입력했으면 저장, 비워뒀으면 관리자 권한 없이(읽기 전용) 연동합니다.
+      const tokenInputVal = settingsAdminTokenInput ? settingsAdminTokenInput.value.trim() : '';
+      localStorage.setItem('sheet_admin_token', tokenInputVal || 'none');
+
       updateSyncIndicator();
       closeSettingsModal();
-      showToast('구글 시트 API 연동이 설정되었습니다!');
-      
+      showToast(tokenInputVal ? '관리자 모드로 연동되었습니다!' : '구글 시트 API 연동이 설정되었습니다! (읽기 전용)');
+
       // Reload projects from sheets
       await fetchFromGoogleSheets(url);
     });
@@ -1279,17 +1329,21 @@ document.addEventListener('DOMContentLoaded', () => {
     btnClearSettings.addEventListener('click', () => {
       if (confirm('구글 시트 연동을 해제하고 로컬 모드로 전환하시겠습니까?')) {
         localStorage.setItem('sheet_api_url', 'none');
+        localStorage.setItem('sheet_admin_token', 'none');
         settingsApiUrlInput.value = '';
+        if (settingsAdminTokenInput) settingsAdminTokenInput.value = '';
         updateSyncIndicator();
         closeSettingsModal();
         showToast('연동이 해제되었습니다. 로컬 데이터를 불러옵니다.');
-        
+
         // Reload from local fallback
         loadLocalFallback();
       }
     });
 
     // Copy Sync sharing link
+    // 주의: 이 링크에는 관리자 토큰이 그대로 포함됩니다. 본인 외의 사람에게 절대
+    // 공유하지 마세요 — 이 링크를 아는 사람은 곧 관리자 권한을 갖게 됩니다.
     btnShareSettings.addEventListener('click', () => {
       const sheetApiUrl = getSheetApiUrl();
       if (!sheetApiUrl) {
@@ -1298,10 +1352,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const baseUrl = window.location.href.split('?')[0].split('#')[0];
-      const shareUrl = `${baseUrl}?api=${encodeURIComponent(sheetApiUrl)}`;
+      let shareUrl = `${baseUrl}?api=${encodeURIComponent(sheetApiUrl)}`;
+      const adminToken = getAdminToken();
+      if (adminToken) {
+        shareUrl += `&token=${encodeURIComponent(adminToken)}`;
+      }
 
       navigator.clipboard.writeText(shareUrl)
-        .then(() => showToast('공유용 연동 주소 링크가 복사되었습니다!'))
+        .then(() => showToast('공유용 연동 주소 링크가 복사되었습니다! (본인 외에는 절대 공유하지 마세요)'))
         .catch(err => {
           console.error('Failed to copy link', err);
           showToast('링크 복사에 실패했습니다.');
@@ -1316,10 +1374,16 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener("DOMContentLoaded", function () {
   // 1. 관리자 여부를 판별합니다.
   //    이 핸들러는 init()보다 나중에 등록되어 나중에 실행되는데, init()은 그 사이에
-  //    replaceState로 주소창의 ?api=를 이미 지워버립니다. 따라서 주소창을 보면 항상
-  //    비어 있고, init()이 localStorage에 저장해 둔 값으로 판별해야 합니다.
-  //    방문자는 ?api=로 들어온 적이 없으므로 이 값이 없습니다.
-  const isAdmin = localStorage.getItem('sheet_api_url') !== null;
+  //    replaceState로 주소창의 ?api=·?token=을 이미 지워버립니다. 따라서 주소창을 보면
+  //    항상 비어 있고, init()이 localStorage에 저장해 둔 값으로 판별해야 합니다.
+  //    방문자는 ?token=으로 들어온 적이 없으므로 이 값이 없습니다.
+  //    (예전에는 sheet_api_url 존재 여부로만 판별했는데, 그 URL은 app.js의
+  //    DEFAULT_API_URL로 이미 공개되어 있어 더 이상 비밀이 아닙니다. 그래서 지금은
+  //    별도의 관리자 토큰(sheet_admin_token)으로만 판별합니다. 단, 이 값은 어디까지나
+  //    "화면에 관리자용 버튼을 보여줄지"를 정할 뿐 — 실제 쓰기 권한은 GAS 쪽에서
+  //    토큰을 다시 검증해야만 확정됩니다. 클라이언트 값은 UI 편의용일 뿐입니다.)
+  const savedAdminToken = localStorage.getItem('sheet_admin_token');
+  const isAdmin = !!savedAdminToken && savedAdminToken !== 'none';
 
   // 카드 안의 수정·삭제 버튼은 렌더링 때마다 새로 생기므로 개별 요소가 아니라
   // body 클래스로 제어합니다 (CSS에서 body.is-admin일 때만 표시).
@@ -1331,11 +1395,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const appFooter = document.querySelector(".app-footer");             // "로컬 파일 동기화" 푸터 배너
 
   // 3. 일반 방문자라면 관리자 기능들을 숨깁니다.
+  //    단, "설정" 버튼(btnOpenSettings)만은 방문자에게도 항상 보이게 둡니다 — 이 버튼이
+  //    곧 방문자용 "관리자 모드 진입" 버튼 역할을 합니다. 눌러서 관리자 토큰을 입력하면
+  //    관리자 모드로 전환됩니다. (이 버튼을 숨기는 것 자체는 실질적인 보안 강화가
+  //    아닙니다 — 진짜 보안은 GAS 쪽의 토큰 검증입니다.)
   if (!isAdmin) {
     if (btnOpenModal) btnOpenModal.style.display = "none";
-    if (btnOpenSettings) btnOpenSettings.style.display = "none";
     if (appFooter) appFooter.style.display = "none";
-    
+
+    if (btnOpenSettings) {
+      btnOpenSettings.title = "관리자 모드 진입";
+      btnOpenSettings.setAttribute("aria-label", "관리자 모드 진입");
+    }
+
     // (선택 사항) 로컬 단독 모드 표시등을 숨기거나 일반 사용자용 텍스트로 바꿀 수도 있습니다.
     const syncIndicator = document.getElementById("sync-indicator");
     if (syncIndicator) {
