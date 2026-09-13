@@ -158,6 +158,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sheetApiUrl = getSheetApiUrl();
     if (sheetApiUrl) {
+      // 캐시가 있으면 먼저 즉시 그려서 로딩 체감 시간을 없애고,
+      // 최신 데이터는 뒤에서 조용히 받아와 화면을 갱신한다 (stale-while-revalidate).
+      const cached = localStorage.getItem('vibe_projects');
+      if (cached) {
+        try {
+          projects = JSON.parse(cached);
+          render();
+        } catch (e) {
+          console.error('Failed to parse cached projects', e);
+        }
+      }
       await fetchFromGoogleSheets(sheetApiUrl);
     } else {
       // Offline/Local mode loading
@@ -204,13 +215,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Fetch live projects from Google Sheets via Web App API
   async function fetchFromGoogleSheets(apiUrl) {
-    projectsGrid.innerHTML = `
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Google Sheets에서 데이터 동기화 중...</p>
-      </div>
-    `;
-    lucide.createIcons();
+    // 이미 캐시된 데이터를 화면에 그려둔 상태라면 스피너로 덮어쓰지 않고
+    // 조용히 배경에서만 새로고침한다 (체감 로딩 시간 제거).
+    const hasCachedView = projects.length > 0;
+    if (!hasCachedView) {
+      projectsGrid.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Google Sheets에서 데이터 동기화 중...</p>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // ponytail: GAS 콜드 스타트가 느릴 때 화면이 무한정 멈추지 않도록 8초 타임아웃만 둔다.
+    // 재시도/백오프까지는 필요하면 그때 추가.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
       // Prevent browser cache on GET requests
@@ -221,7 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 토큰이 없으면 GAS가 서버 단에서 비공개 항목을 아예 걸러내고 보냅니다.
         cacheBustUrl += '&token=' + encodeURIComponent(adminToken);
       }
-      const response = await fetch(cacheBustUrl);
+      const response = await fetch(cacheBustUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -236,15 +258,21 @@ document.addEventListener('DOMContentLoaded', () => {
           loadLocalFallback();
         }
       } else {
-        showToast('구글 시트 로드 실패. 로컬 캐시를 불러옵니다.');
+        if (!hasCachedView) {
+          showToast('구글 시트 로드 실패. 로컬 캐시를 불러옵니다.');
+          loadLocalFallback();
+        }
         updateSyncIndicator('failed');
-        loadLocalFallback();
       }
     } catch (err) {
-      console.error('Sheets sync error:', err);
-      showToast('네트워크 오류: 로컬 오프라인 데이터로 구동합니다.');
+      clearTimeout(timeoutId);
+      const timedOut = err.name === 'AbortError';
+      console.error(timedOut ? 'Sheets sync timeout (8s)' : 'Sheets sync error:', err);
+      if (!hasCachedView) {
+        showToast(timedOut ? '응답이 너무 느립니다. 로컬 오프라인 데이터로 구동합니다.' : '네트워크 오류: 로컬 오프라인 데이터로 구동합니다.');
+        loadLocalFallback();
+      }
       updateSyncIndicator('failed');
-      loadLocalFallback();
     }
   }
 
