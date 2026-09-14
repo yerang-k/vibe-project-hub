@@ -187,6 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupEventListeners();
+    hideSplashScreen();
+  }
+
+  // 초기 로딩 스플래시를 부드럽게 감춘다 (init() 완료 시 1회 호출).
+  function hideSplashScreen() {
+    const splash = document.getElementById('splash-screen');
+    if (!splash) return;
+    splash.classList.add('splash-hidden');
+    setTimeout(() => splash.remove(), 600);
   }
 
   // Update visual state of Sheets Integration Indicator
