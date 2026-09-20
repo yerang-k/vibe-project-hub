@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="badge-status ${statusClass}"><span class="status-dot"></span>${statusLabel}</span>
                 ${privateBadge}
               </div>
-              <p class="app-row-desc">${escapeHtml(project.description)}</p>
+              <p class="app-row-desc">${linkify(project.description)}</p>
             </div>
             <div class="app-row-actions">
               <div class="card-admin-tools">
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <h2>${escapeHtml(project.title)}</h2>
-          <p class="card-desc">${escapeHtml(project.description)}</p>
+          <p class="card-desc">${linkify(project.description)}</p>
           
           <div class="card-tech-stack">
             ${techTagsHtml}
@@ -734,6 +734,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 5. Helper Utilities
+  // 설명 속 http(s) 주소를 새 탭에서 열리는 링크로 바꾼다 (이스케이프 후 처리해 XSS 방지)
+  function linkify(str) {
+    return escapeHtml(str).replace(/https?:\/\/[^\s<]+/g, url => {
+      const m = url.match(/[.,)!?;:]+$/); // 문장부호는 링크에서 제외
+      const tail = m ? m[0] : '';
+      const href = url.slice(0, url.length - tail.length);
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="desc-link">${href}</a>${tail}`;
+    });
+  }
+
   function escapeHtml(str) {
     if (!str) return '';
     return str

@@ -1366,3 +1366,5 @@ body.is-admin .card-admin-tools {
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
+
+.desc-link { color: var(--accent, #4f8cff); text-decoration: underline; word-break: break-all; }
