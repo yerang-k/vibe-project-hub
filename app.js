@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="badge-status ${statusClass}"><span class="status-dot"></span>${statusLabel}</span>
                 ${privateBadge}
               </div>
-              <p class="app-row-desc">${linkify(project.description)}</p>
+              <p class="app-row-desc">${escapeHtml(project.description)}</p>
             </div>
             <div class="app-row-actions">
               <div class="card-admin-tools">
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <h2>${escapeHtml(project.title)}</h2>
-          <p class="card-desc">${linkify(project.description)}</p>
+          <p class="card-desc">${escapeHtml(project.description)}</p>
           
           <div class="card-tech-stack">
             ${techTagsHtml}
@@ -734,14 +734,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 5. Helper Utilities
-  // 설명 속 http(s) 주소를 새 탭에서 열리는 링크로 바꾼다 (이스케이프 후 처리해 XSS 방지)
-  function linkify(str) {
-    return escapeHtml(str).replace(/https?:\/\/[^\s<]+/g, url => {
-      const m = url.match(/[.,)!?;:]+$/); // 문장부호는 링크에서 제외
-      const tail = m ? m[0] : '';
-      const href = url.slice(0, url.length - tail.length);
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="desc-link">${href}</a>${tail}`;
-    });
+  // 수정창에서 설명 속 http(s) 주소를 클릭 가능한 링크 목록으로 보여준다
+  function renderDescLinks() {
+    const box = document.getElementById('desc-links');
+    const urls = (document.getElementById('proj-description').value.match(/https?:\/\/[^\s<]+/g) || [])
+      .map(u => u.replace(/[.,)!?;:]+$/, '')); // 문장부호는 링크에서 제외
+    box.innerHTML = [...new Set(urls)].map(u =>
+      `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer" class="desc-link">🔗 ${escapeHtml(u)}</a>`
+    ).join('');
   }
 
   function escapeHtml(str) {
@@ -804,6 +804,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    document.getElementById('proj-description').addEventListener('input', renderDescLinks);
+
     // Modal open / close trigger
     btnOpenModal.addEventListener('click', () => {
       // Reset headers to "Create" mode
@@ -817,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModal = () => {
       projectModal.classList.remove('active');
       projectForm.reset();
+      renderDescLinks();
       document.getElementById('proj-id').value = ''; // Reset hidden ID
       document.body.style.overflow = '';
     };
@@ -1025,6 +1028,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('proj-status').value = project.status;
       document.getElementById('proj-category').value = project.category;
       document.getElementById('proj-description').value = project.description;
+      renderDescLinks();
       document.getElementById('proj-tech').value = project.techStack.join(', ');
       document.getElementById('proj-ai').value = project.aiTools || '';
       document.getElementById('proj-prompt').value = project.promptSummary || '';

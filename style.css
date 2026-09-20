@@ -1367,4 +1367,5 @@ body.is-admin .card-admin-tools {
   letter-spacing: 0.02em;
 }
 
-.desc-link { color: var(--accent, #4f8cff); text-decoration: underline; word-break: break-all; }
+.desc-links { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.desc-link { color: var(--accent, #4f8cff); text-decoration: underline; word-break: break-all; font-size: 0.85rem; }
