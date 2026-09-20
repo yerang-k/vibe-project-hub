@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const query = currentSearchQuery.toLowerCase().trim();
       const matchesSearch = !query ||
         project.title.toLowerCase().includes(query) ||
-        project.description.toLowerCase().includes(query) ||
+        descText(project).toLowerCase().includes(query) ||
         project.techStack.some(tech => tech.toLowerCase().includes(query)) ||
         (project.aiTools && project.aiTools.toLowerCase().includes(query));
 
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="badge-status ${statusClass}"><span class="status-dot"></span>${statusLabel}</span>
                 ${privateBadge}
               </div>
-              <p class="app-row-desc">${escapeHtml(project.description)}</p>
+              <p class="app-row-desc">${escapeHtml(descText(project))}</p>
             </div>
             <div class="app-row-actions">
               <div class="card-admin-tools">
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <h2>${escapeHtml(project.title)}</h2>
-          <p class="card-desc">${escapeHtml(project.description)}</p>
+          <p class="card-desc">${escapeHtml(descText(project))}</p>
           
           <div class="card-tech-stack">
             ${techTagsHtml}
@@ -734,17 +734,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 5. Helper Utilities
-  // 수정창: 설명 전체를 그대로 보여주되 http(s) 주소만 클릭 가능한 링크로 바꾼 미리보기
-  function renderDescLinks() {
-    const box = document.getElementById('desc-links');
-    const text = document.getElementById('proj-description').value;
-    if (!/https?:\/\//.test(text)) { box.innerHTML = ''; return; }
-    const body = escapeHtml(text).replace(/https?:\/\/[^\s<]+/g, u => {
-      const tail = (u.match(/[.,)!?;:]+$/) || [''])[0]; // 문장부호는 링크에서 제외
-      const href = u.slice(0, u.length - tail.length);
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="desc-link">${href}</a>${tail}`;
-    });
-    box.innerHTML = `<div class="desc-links-label">링크 미리보기 (눌러서 열기)</div><div class="desc-links-body">${body}</div>`;
+  // 참고 링크는 별도 열이 없어도 되도록 설명 끝에 "[참고링크]" 블록(줄마다 '이름 | 주소')으로 함께 저장한다.
+  // 화면(카드·목록·검색)에는 descText()로 블록을 뺀 설명만 쓴다.
+  const REF_MARK = '\n\n[참고링크]\n';
+  function splitDesc(raw) {
+    raw = raw || '';
+    const i = raw.indexOf(REF_MARK);
+    if (i < 0) return { text: raw, links: [] };
+    const links = raw.slice(i + REF_MARK.length).split('\n').map(l => {
+      const k = l.indexOf(' | ');
+      return k < 0 ? { label: '', url: l.trim() } : { label: l.slice(0, k).trim(), url: l.slice(k + 3).trim() };
+    }).filter(l => l.url);
+    return { text: raw.slice(0, i), links };
+  }
+  function descText(p) { return splitDesc(p.description).text; }
+  function joinDesc(text, links) {
+    return links.length ? text + REF_MARK + links.map(l => `${l.label} | ${l.url}`).join('\n') : text;
+  }
+
+  // 수정창의 참고 링크 입력 줄: 이름 / 주소 / 열기 / 삭제
+  function addRefLinkRow(label = '', url = '') {
+    const row = document.createElement('div');
+    row.className = 'ref-row';
+    row.innerHTML = `
+      <input type="text" class="ref-label" placeholder="이름 (예: 참고 블로그)" maxlength="60">
+      <input type="text" class="ref-url" placeholder="주소 (https://...)">
+      <a class="ref-open" target="_blank" rel="noopener noreferrer" title="새 탭에서 열기">열기 ↗</a>
+      <button type="button" class="ref-del" title="삭제">✕</button>`;
+    const labelEl = row.querySelector('.ref-label'), urlEl = row.querySelector('.ref-url'), open = row.querySelector('.ref-open');
+    labelEl.value = label; urlEl.value = url;
+    const sync = () => { open.classList.toggle('disabled', !urlEl.value.trim()); open.href = urlEl.value.trim() ? formatUrl(urlEl.value) : '#'; };
+    urlEl.addEventListener('input', sync); sync();
+    row.querySelector('.ref-del').addEventListener('click', () => row.remove());
+    document.getElementById('ref-links').appendChild(row);
+  }
+  function setRefLinks(links) {
+    document.getElementById('ref-links').innerHTML = '';
+    links.forEach(l => addRefLinkRow(l.label, l.url));
+  }
+  function readRefLinks() {
+    return [...document.querySelectorAll('#ref-links .ref-row')].map(r => ({
+      label: r.querySelector('.ref-label').value.replace(/[\r\n|]/g, ' ').trim(),
+      url: formatUrl(r.querySelector('.ref-url').value)
+    })).filter(l => l.url);
   }
 
   function escapeHtml(str) {
@@ -807,7 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    document.getElementById('proj-description').addEventListener('input', renderDescLinks);
+    document.getElementById('btn-add-ref').addEventListener('click', () => addRefLinkRow());
 
     // Modal open / close trigger
     btnOpenModal.addEventListener('click', () => {
@@ -822,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModal = () => {
       projectModal.classList.remove('active');
       projectForm.reset();
-      renderDescLinks();
+      setRefLinks([]);
       document.getElementById('proj-id').value = ''; // Reset hidden ID
       document.body.style.overflow = '';
     };
@@ -841,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const title = document.getElementById('proj-title').value;
       const status = document.getElementById('proj-status').value;
       const category = document.getElementById('proj-category').value;
-      const description = document.getElementById('proj-description').value;
+      const description = joinDesc(document.getElementById('proj-description').value, readRefLinks());
       const techInput = document.getElementById('proj-tech').value;
       const aiTools = document.getElementById('proj-ai').value;
       const promptSummary = document.getElementById('proj-prompt').value;
@@ -1030,8 +1062,9 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('proj-title').value = project.title;
       document.getElementById('proj-status').value = project.status;
       document.getElementById('proj-category').value = project.category;
-      document.getElementById('proj-description').value = project.description;
-      renderDescLinks();
+      const d = splitDesc(project.description);
+      document.getElementById('proj-description').value = d.text;
+      setRefLinks(d.links);
       document.getElementById('proj-tech').value = project.techStack.join(', ');
       document.getElementById('proj-ai').value = project.aiTools || '';
       document.getElementById('proj-prompt').value = project.promptSummary || '';
