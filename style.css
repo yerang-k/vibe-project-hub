@@ -1367,5 +1367,7 @@ body.is-admin .card-admin-tools {
   letter-spacing: 0.02em;
 }
 
-.desc-links { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-.desc-link { color: var(--accent, #4f8cff); text-decoration: underline; word-break: break-all; font-size: 0.85rem; }
+.desc-links { margin-top: 6px; }
+.desc-links-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px; }
+.desc-links-body { white-space: pre-wrap; word-break: break-all; font-size: 0.85rem; line-height: 1.5; padding: 8px 10px; border-radius: 8px; background: rgba(127,127,127,0.1); }
+.desc-link { color: var(--accent, #4f8cff); text-decoration: underline; }
