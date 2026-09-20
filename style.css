@@ -57,7 +57,7 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip; /* hidden은 body를 스크롤 컨테이너로 만들어 스크롤바가 2개 생김 */
   position: relative;
   line-height: 1.6;
 }
