@@ -734,14 +734,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 5. Helper Utilities
-  // 수정창에서 설명 속 http(s) 주소를 클릭 가능한 링크 목록으로 보여준다
+  // 수정창: 설명 전체를 그대로 보여주되 http(s) 주소만 클릭 가능한 링크로 바꾼 미리보기
   function renderDescLinks() {
     const box = document.getElementById('desc-links');
-    const urls = (document.getElementById('proj-description').value.match(/https?:\/\/[^\s<]+/g) || [])
-      .map(u => u.replace(/[.,)!?;:]+$/, '')); // 문장부호는 링크에서 제외
-    box.innerHTML = [...new Set(urls)].map(u =>
-      `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer" class="desc-link">🔗 ${escapeHtml(u)}</a>`
-    ).join('');
+    const text = document.getElementById('proj-description').value;
+    if (!/https?:\/\//.test(text)) { box.innerHTML = ''; return; }
+    const body = escapeHtml(text).replace(/https?:\/\/[^\s<]+/g, u => {
+      const tail = (u.match(/[.,)!?;:]+$/) || [''])[0]; // 문장부호는 링크에서 제외
+      const href = u.slice(0, u.length - tail.length);
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="desc-link">${href}</a>${tail}`;
+    });
+    box.innerHTML = `<div class="desc-links-label">링크 미리보기 (눌러서 열기)</div><div class="desc-links-body">${body}</div>`;
   }
 
   function escapeHtml(str) {
