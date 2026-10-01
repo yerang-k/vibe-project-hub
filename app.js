@@ -154,6 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
       window.history.replaceState({path: cleanUrl}, '', cleanUrl);
     }
 
+    // 폴더 열기 / 모달 열기를 뒤로가기로 닫을 수 있도록, 히스토리 기준점을 하나 마련해 둔다.
+    // (주소는 그대로 두고 state만 비워서 심는다 — 위 ?api=·?token= 정리용 replaceState와 섞이지 않게 독립적으로 둔다.)
+    if (!history.state) {
+      history.replaceState({}, '', location.href);
+    }
+
     updateSyncIndicator();
 
     const sheetApiUrl = getSheetApiUrl();
@@ -807,7 +813,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 6. Setup Event Listeners
+  // 뒤로가기(브라우저/마우스 버튼) 지원 ------------------------------------
+  // 폴더에 들어가거나 모달을 열 때마다 history.pushState로 "되돌아올 지점"을
+  // 남겨둔다. 뒤로가기를 누르면 popstate가 발생하고, 이 함수가 현재 화면
+  // 상태를 history.state에 맞춰 되돌린다. 이미 그 상태라면 아무것도 하지
+  // 않으므로(멱등), X버튼/취소 클릭으로 먼저 닫은 뒤 쌓인 history 엔트리를
+  // 소비할 때도 안전하게 재사용된다.
+  function syncUIToHistoryState(state) {
+    const wantFolder = (state && state.folder) || null;
+    if (currentFolder !== wantFolder) {
+      currentFolder = wantFolder;
+      render();
+    }
+
+    const wantProjectModal = !!(state && state.modal === 'project');
+    if (wantProjectModal && !projectModal.classList.contains('active')) {
+      projectModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } else if (!wantProjectModal && projectModal.classList.contains('active')) {
+      projectModal.classList.remove('active');
+      projectForm.reset();
+      setRefLinks([]);
+      document.getElementById('proj-id').value = '';
+      document.body.style.overflow = '';
+    }
+
+    const wantSettingsModal = !!(state && state.modal === 'settings');
+    if (wantSettingsModal && !settingsModal.classList.contains('active')) {
+      settingsModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } else if (!wantSettingsModal && settingsModal.classList.contains('active')) {
+      settingsModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // 현재 history.state 위에 레이어 하나를 쌓는다 (예: 폴더 진입, 모달 열기).
+  function pushNavState(patch) {
+    history.pushState(Object.assign({}, history.state, patch), '', location.href);
+  }
+
   function setupEventListeners() {
+    window.addEventListener('popstate', (e) => syncUIToHistoryState(e.state));
+
     // Real-time search input
     searchInput.addEventListener('input', (e) => {
       currentSearchQuery = e.target.value;
@@ -849,6 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       projectModal.classList.add('active');
       document.body.style.overflow = 'hidden';
+      pushNavState({ modal: 'project' });
     });
 
     const closeModal = () => {
@@ -857,6 +906,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setRefLinks([]);
       document.getElementById('proj-id').value = ''; // Reset hidden ID
       document.body.style.overflow = '';
+      // 이 모달을 열 때 쌓아둔 history 엔트리를 소비한다 (뒤로가기와 짝을 맞춤).
+      if (history.state && history.state.modal === 'project') {
+        history.back();
+      }
     };
 
     btnCloseModal.addEventListener('click', closeModal);
@@ -1029,8 +1082,22 @@ document.addEventListener('DOMContentLoaded', () => {
     projectsGrid.addEventListener('click', (e) => {
       // 폴더 열기 / 나가기
       const tile = e.target.closest('.folder-tile');
-      if (tile) { currentFolder = tile.dataset.folder; render(); return; }
-      if (e.target.closest('.folder-back')) { currentFolder = null; render(); return; }
+      if (tile) {
+        currentFolder = tile.dataset.folder;
+        render();
+        pushNavState({ folder: currentFolder });
+        return;
+      }
+      if (e.target.closest('.folder-back')) {
+        // 폴더에 들어올 때 쌓아둔 history 엔트리를 소비한다 (뒤로가기와 짝을 맞춤).
+        if (history.state && history.state.folder) {
+          history.back();
+        } else {
+          currentFolder = null;
+          render();
+        }
+        return;
+      }
 
       const layoutBtn = e.target.closest('.layout-btn');
       if (layoutBtn) {
@@ -1082,7 +1149,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // Show modal
       projectModal.classList.add('active');
       document.body.style.overflow = 'hidden';
-      
+      pushNavState({ modal: 'project' });
+
       // Update tech chips visual status
       setTimeout(updateChipHighlights, 50);
     }
@@ -1372,11 +1440,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       settingsModal.classList.add('active');
       document.body.style.overflow = 'hidden';
+      pushNavState({ modal: 'settings' });
     });
 
     const closeSettingsModal = () => {
       settingsModal.classList.remove('active');
       document.body.style.overflow = '';
+      // 이 모달을 열 때 쌓아둔 history 엔트리를 소비한다 (뒤로가기와 짝을 맞춤).
+      if (history.state && history.state.modal === 'settings') {
+        history.back();
+      }
     };
 
     btnCloseSettings.addEventListener('click', closeSettingsModal);
